@@ -1,8 +1,7 @@
 ---
-// Telegram Mini App — hosted at save.smoservice.media/app
-// Pure HTML+JS, no backend calls. UI shortcuts that open bot commands.
-// Analytics: Telegram Mini Apps Analytics SDK (https://tganalytics.xyz).
-// Build-time env: PUBLIC_TG_ANALYTICS_TOKEN — set in Coolify, no token = SDK no-op.
+// Telegram Mini App — functional UI, not just hints.
+// Sends actions to the bot via WebApp.sendData (bot has F.web_app_data handler).
+// Analytics: TG Mini Apps Analytics SDK (PUBLIC_TG_ANALYTICS_TOKEN at build time).
 const tgAnalyticsToken = import.meta.env.PUBLIC_TG_ANALYTICS_TOKEN || '';
 ---
 <!doctype html>
@@ -14,105 +13,186 @@ const tgAnalyticsToken = import.meta.env.PUBLIC_TG_ANALYTICS_TOKEN || '';
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     {tgAnalyticsToken && (
-      <script
-        async
-        src="https://tganalytics.xyz/index.js"
-        type="text/javascript"
-      />
+      <script async src="https://tganalytics.xyz/index.js" type="text/javascript" />
     )}
     <style>
       :root {
         --bg: #0a0a0a;
         --card: #141414;
-        --border: #222;
-        --text: #f0f0f0;
-        --muted: #888;
+        --card-2: #1c1c1c;
+        --border: #262626;
+        --text: #f5f5f5;
+        --muted: #8a8a8a;
         --accent: #f97316;
+        --accent-h: #fb923c;
+        --success: #22c55e;
+        --danger: #ef4444;
       }
       * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
       body {
-        margin: 0;
-        padding: 0 16px env(safe-area-inset-bottom, 16px);
         font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
         background: var(--bg);
         color: var(--text);
         line-height: 1.5;
         -webkit-tap-highlight-color: transparent;
+        padding: 0 16px env(safe-area-inset-bottom, 16px);
       }
       header {
-        padding: 24px 0 8px;
+        padding: 28px 0 16px;
         text-align: center;
       }
       header .logo {
-        font-size: 28px;
+        font-size: 32px;
         font-weight: 700;
         letter-spacing: -0.02em;
       }
       header .logo span { color: var(--accent); }
       header p {
-        margin: 6px 0 0;
+        margin: 8px 0 0;
         color: var(--muted);
         font-size: 14px;
       }
-      h2 {
-        font-size: 16px;
-        margin: 24px 0 10px;
-        color: var(--muted);
-        font-weight: 500;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
+      .tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 4px;
+        background: var(--card);
+        border-radius: 12px;
+        padding: 4px;
+        margin-bottom: 20px;
       }
-      .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-      .action {
+      .tab {
+        padding: 10px 8px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border-radius: 10px;
+        color: var(--muted);
+        background: transparent;
+        border: none;
+        font-family: inherit;
+        transition: background .15s, color .15s;
+      }
+      .tab.active {
+        color: var(--text);
+        background: var(--card-2);
+      }
+      .pane { display: none; }
+      .pane.active { display: block; }
+      .field {
+        display: block;
+        margin-bottom: 16px;
+      }
+      .field label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 8px;
+      }
+      .input, .select {
+        width: 100%;
         background: var(--card);
         border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 18px 14px;
-        text-align: left;
-        cursor: pointer;
-        transition: transform .12s, background .12s;
         color: var(--text);
-        font: inherit;
+        font-size: 16px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        font-family: inherit;
+        appearance: none;
+        -webkit-appearance: none;
       }
-      .action:active { transform: scale(0.96); background: #1a1a1a; }
-      .action .emoji { font-size: 28px; display: block; margin-bottom: 8px; }
-      .action .title { font-weight: 600; font-size: 15px; }
-      .action .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+      .input:focus, .select:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+      .input::placeholder {
+        color: var(--muted);
+      }
+      .btn {
+        width: 100%;
+        background: var(--accent);
+        color: #000;
+        font-weight: 700;
+        font-size: 16px;
+        padding: 16px;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background .15s, transform .1s;
+      }
+      .btn:active { transform: scale(0.98); background: var(--accent-h); }
+      .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+      .quality-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 6px;
+        margin-bottom: 16px;
+      }
+      .quality-row button {
+        padding: 10px 6px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 10px;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background .15s, border-color .15s;
+      }
+      .quality-row button.active {
+        background: var(--accent);
+        color: #000;
+        border-color: var(--accent);
+      }
       .platforms {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
+        gap: 6px;
+        margin-bottom: 20px;
       }
       .platform {
         background: var(--card);
         border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 14px 6px;
+        border-radius: 10px;
+        padding: 10px 4px;
         text-align: center;
-        font-size: 12px;
+        font-size: 11px;
+        color: var(--muted);
       }
-      .platform .emoji { font-size: 24px; display: block; margin-bottom: 4px; }
-      .hint {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 14px;
+      .platform .emoji { font-size: 20px; display: block; margin-bottom: 2px; }
+      .toast {
+        position: fixed;
+        bottom: 32px;
+        left: 16px;
+        right: 16px;
+        background: var(--success);
+        color: #000;
         padding: 14px 16px;
-        margin-top: 12px;
+        border-radius: 12px;
         font-size: 14px;
-        line-height: 1.45;
+        font-weight: 600;
+        text-align: center;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity .2s, transform .2s;
+        pointer-events: none;
+        z-index: 100;
       }
-      .hint code {
-        background: #1f1f1f;
-        padding: 1px 6px;
-        border-radius: 4px;
-        font-size: 13px;
-      }
+      .toast.show { opacity: 1; transform: translateY(0); }
+      .toast.danger { background: var(--danger); color: #fff; }
       footer {
         margin-top: 28px;
         text-align: center;
         color: var(--muted);
         font-size: 12px;
-        padding-bottom: 24px;
+        padding-bottom: 32px;
       }
       footer a { color: var(--muted); text-decoration: underline; }
     </style>
@@ -123,41 +203,84 @@ const tgAnalyticsToken = import.meta.env.PUBLIC_TG_ANALYTICS_TOKEN || '';
       <p>Скачивание видео из соцсетей</p>
     </header>
 
-    <h2>Что хочешь сделать</h2>
-    <div class="actions">
-      <button class="action" data-action="download">
-        <span class="emoji">📥</span>
-        <div class="title">Скачать видео</div>
-        <div class="sub">Просто пришли ссылку</div>
-      </button>
-      <button class="action" data-action="transcript">
-        <span class="emoji">🎙</span>
-        <div class="title">Видео в текст</div>
-        <div class="sub">Распознать речь</div>
-      </button>
-      <button class="action" data-action="subscribe">
-        <span class="emoji">🔔</span>
-        <div class="title">Подписки</div>
-        <div class="sub">VK / YouTube каналы</div>
-      </button>
-      <button class="action" data-action="quality">
-        <span class="emoji">🎛</span>
-        <div class="title">Качество</div>
-        <div class="sub">1080p / 720p / MP3</div>
-      </button>
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="download" type="button">📥 Скачать</button>
+      <button class="tab" data-tab="subscribe" type="button">🔔 Подписки</button>
+      <button class="tab" data-tab="settings" type="button">🎛 Качество</button>
     </div>
 
-    <h2>Поддерживаемые платформы</h2>
-    <div class="platforms">
-      <div class="platform"><span class="emoji">🟣</span>Instagram</div>
-      <div class="platform"><span class="emoji">⚫</span>TikTok</div>
-      <div class="platform"><span class="emoji">🔴</span>YouTube</div>
-      <div class="platform"><span class="emoji">✖️</span>X / Twitter</div>
-      <div class="platform"><span class="emoji">🔵</span>VK</div>
-      <div class="platform"><span class="emoji">🧡</span>OK</div>
-    </div>
+    <!-- DOWNLOAD -->
+    <section class="pane active" data-pane="download">
+      <div class="field">
+        <label for="dl-url">Ссылка на видео</label>
+        <input id="dl-url" class="input" type="url" placeholder="https://tiktok.com/@user/video/123..." inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" />
+      </div>
+      <div class="field">
+        <label>Качество</label>
+        <div class="quality-row" id="dl-quality">
+          <button type="button" data-q="1080">1080p</button>
+          <button type="button" data-q="720" class="active">720p</button>
+          <button type="button" data-q="480">480p</button>
+          <button type="button" data-q="audio">🎵 MP3</button>
+        </div>
+      </div>
+      <button class="btn" id="dl-submit" type="button">Скачать в чат</button>
+      <p style="color:var(--muted); font-size:13px; margin-top:14px; text-align:center;">
+        Результат придёт сообщением в чат с ботом.
+      </p>
 
-    <div id="hint" class="hint" style="display:none"></div>
+      <h2 style="font-size:14px; color:var(--muted); margin:24px 0 10px; text-transform:uppercase; letter-spacing:0.04em; font-weight:500;">Поддерживаемые платформы</h2>
+      <div class="platforms">
+        <div class="platform"><span class="emoji">🟣</span>Instagram</div>
+        <div class="platform"><span class="emoji">⚫</span>TikTok</div>
+        <div class="platform"><span class="emoji">🔴</span>YouTube</div>
+        <div class="platform"><span class="emoji">✖️</span>X / Twitter</div>
+        <div class="platform"><span class="emoji">🔵</span>VK</div>
+        <div class="platform"><span class="emoji">🧡</span>OK</div>
+      </div>
+    </section>
+
+    <!-- SUBSCRIBE -->
+    <section class="pane" data-pane="subscribe">
+      <div class="field">
+        <label for="sub-url">Канал YouTube или VK</label>
+        <input id="sub-url" class="input" type="url" placeholder="https://youtube.com/@channel  или  https://vk.com/group" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" />
+      </div>
+      <button class="btn" id="sub-submit" type="button">🔔 Подписаться</button>
+      <p style="color:var(--muted); font-size:13px; margin-top:14px; text-align:center;">
+        Бот будет автоматически присылать новые посты каждые 30 минут.
+      </p>
+      <div style="background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-top:20px; font-size:14px; color:var(--muted);">
+        <strong style="color:var(--text);">Управление подписками</strong><br/>
+        Список ваших подписок и удаление — в чате с ботом:<br/>
+        <code style="background:var(--card-2); padding:2px 6px; border-radius:4px; color:var(--text);">/subscriptions</code> — список<br/>
+        <code style="background:var(--card-2); padding:2px 6px; border-radius:4px; color:var(--text);">/unsubscribe N</code> — отписаться по номеру
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="pane" data-pane="settings">
+      <div class="field">
+        <label>Качество по умолчанию</label>
+        <div class="quality-row" id="settings-quality">
+          <button type="button" data-q="1080">1080p</button>
+          <button type="button" data-q="720" class="active">720p</button>
+          <button type="button" data-q="480">480p</button>
+          <button type="button" data-q="audio">🎵 MP3</button>
+        </div>
+        <p style="color:var(--muted); font-size:13px; margin:8px 0 0;">
+          Сохранится для всех будущих скачиваний — как в чате через меню → 🎛 Качество.
+        </p>
+      </div>
+      <button class="btn" id="settings-submit" type="button">💾 Сохранить качество</button>
+
+      <div style="background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-top:24px; font-size:14px; color:var(--muted); line-height:1.6;">
+        <strong style="color:var(--text); display:block; margin-bottom:6px;">🎙 Видео в текст</strong>
+        Пришли голосовое сообщение, аудиофайл или видео-кружок прямо в чат с ботом — он распознает речь (faster-whisper локально, поддержка ru/en/40+ языков) и пришлёт текст.
+      </div>
+    </section>
+
+    <div id="toast" class="toast"></div>
 
     <footer>
       <a href="https://t.me/SaveFastVideoFreebot">@SaveFastVideoFreebot</a>
@@ -166,22 +289,15 @@ const tgAnalyticsToken = import.meta.env.PUBLIC_TG_ANALYTICS_TOKEN || '';
     </footer>
 
     <script is:inline define:vars={{ tgAnalyticsToken }}>
-      // Init Telegram Mini Apps Analytics SDK if token configured.
-      // SDK auto-tracks: open/close, button taps, link opens. Custom events
-      // via window.telegramAnalytics.event('name', { props }).
       function _initTgAnalytics() {
         if (!tgAnalyticsToken || !window.telegramAnalytics) return;
         try {
-          window.telegramAnalytics.init({
-            token: tgAnalyticsToken,
-            appName: 'save_fast_as_video',
-          });
+          window.telegramAnalytics.init({ token: tgAnalyticsToken, appName: 'save_fast_as_video' });
         } catch (e) { console.warn('tga init failed', e); }
       }
       if (window.telegramAnalytics) {
         _initTgAnalytics();
       } else {
-        // SDK script is async — wait for it
         let tries = 0;
         const iv = setInterval(() => {
           if (window.telegramAnalytics || tries++ > 50) {
@@ -191,59 +307,144 @@ const tgAnalyticsToken = import.meta.env.PUBLIC_TG_ANALYTICS_TOKEN || '';
         }, 100);
       }
     </script>
+
     <script is:inline>
       (function () {
         const tg = window.Telegram && window.Telegram.WebApp;
-        const inTelegram = !!tg && tg.initData !== undefined && tg.initData !== '';
+        const inTg = !!tg && tg.initData !== undefined && tg.initData !== '';
+
         if (tg) {
           try {
             tg.ready();
             tg.expand();
-            // theme
+            // theme adapt
             const tp = tg.themeParams || {};
             if (tp.bg_color) document.documentElement.style.setProperty('--bg', tp.bg_color);
             if (tp.secondary_bg_color) document.documentElement.style.setProperty('--card', tp.secondary_bg_color);
             if (tp.text_color) document.documentElement.style.setProperty('--text', tp.text_color);
             if (tp.hint_color) document.documentElement.style.setProperty('--muted', tp.hint_color);
-            if (tp.button_color) document.documentElement.style.setProperty('--accent', tp.button_color);
+            if (tp.button_color) {
+              document.documentElement.style.setProperty('--accent', tp.button_color);
+              if (tp.button_text_color) {
+                // ensure btn text contrasts
+              }
+            }
           } catch (e) {}
         }
 
-        const hints = {
-          download:   '📥 <b>Скачать видео</b><br/>Просто отправь ссылку на видео из Instagram / TikTok / YouTube в чат с ботом. Можно с <code>https://</code> и без — бот сам определит платформу.',
-          transcript: '🎙 <b>Транскрипция видео в текст</b><br/>Отправь ссылку на видео обычным сообщением, а потом ответом на это сообщение — команду <code>/transcript</code>. Бот распознает речь (поддержка ru / en / 40+ языков) и пришлёт текст.',
-          subscribe:  '🔔 <b>Подписки на каналы</b><br/>Команда:<br/><code>/subscribe https://youtube.com/@gusevself</code><br/>Бот будет автоматически присылать новые видео каждые 30 минут. Платформы: <b>YouTube</b> и <b>VK</b>. Список подписок: <code>/subscriptions</code>',
-          quality:    '🎛 <b>Выбор качества</b><br/>В чате с ботом нажми <b>Меню</b> (под полем ввода) → <b>🎛 Качество</b> → выбери 1080p, 720p, 480p или 🎵 Только звук (mp3). Качество сохранится для всех будущих скачиваний.',
+        // helpers
+        const $ = (s, root) => (root || document).querySelector(s);
+        const $$ = (s, root) => Array.from((root || document).querySelectorAll(s));
+        const haptic = (style) => {
+          if (inTg && tg.HapticFeedback) {
+            try { tg.HapticFeedback.impactOccurred(style || 'light'); } catch (e) {}
+          }
+        };
+        const toast = (msg, danger) => {
+          const t = $('#toast');
+          t.textContent = msg;
+          t.classList.toggle('danger', !!danger);
+          t.classList.add('show');
+          setTimeout(() => t.classList.remove('show'), 2400);
         };
 
-        const hintEl = document.getElementById('hint');
-        document.querySelectorAll('.action').forEach(btn => {
+        // tabs
+        $$('.tab').forEach(btn => {
           btn.addEventListener('click', () => {
-            const action = btn.getAttribute('data-action');
-            // analytics event
+            haptic('light');
+            const tab = btn.getAttribute('data-tab');
+            $$('.tab').forEach(b => b.classList.toggle('active', b === btn));
+            $$('.pane').forEach(p => p.classList.toggle('active', p.getAttribute('data-pane') === tab));
             if (window.telegramAnalytics) {
-              try { window.telegramAnalytics.event('action_tap', { action }); } catch (e) {}
+              try { window.telegramAnalytics.event('tab_switch', { tab }); } catch (e) {}
             }
-            // haptic if in TG
-            if (inTelegram && tg.HapticFeedback) {
-              try { tg.HapticFeedback.impactOccurred('light'); } catch (e) {}
-            }
-            hintEl.innerHTML = hints[action] || '';
-            hintEl.style.display = 'block';
-            // show MainButton to close the mini app
-            if (inTelegram && tg.MainButton) {
-              try {
-                tg.MainButton.setText('Назад в бот');
-                tg.MainButton.show();
-                tg.MainButton.onClick(() => tg.close());
-              } catch (e) {}
-            }
-            hintEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           });
         });
 
-        // BackButton support
-        if (inTelegram && tg.BackButton) {
+        // quality buttons (download tab & settings tab)
+        const wireQualityGroup = (groupSel) => {
+          const group = $(groupSel);
+          if (!group) return;
+          $$('button', group).forEach(btn => {
+            btn.addEventListener('click', () => {
+              haptic('light');
+              $$('button', group).forEach(b => b.classList.toggle('active', b === btn));
+            });
+          });
+        };
+        wireQualityGroup('#dl-quality');
+        wireQualityGroup('#settings-quality');
+
+        const getActiveQuality = (groupSel) => {
+          const active = $(groupSel + ' button.active');
+          return active ? active.getAttribute('data-q') : '720';
+        };
+
+        // send to bot via WebApp.sendData OR fallback (open bot with deep-link)
+        const sendToBot = (payload) => {
+          const json = JSON.stringify(payload);
+          if (inTg && typeof tg.sendData === 'function') {
+            try {
+              tg.sendData(json);
+              // sendData auto-closes the mini-app in TG client
+            } catch (e) {
+              console.error('sendData failed', e);
+              toast('Не удалось отправить — открой бот вручную', true);
+            }
+          } else {
+            // outside TG — show what would be sent + link
+            console.log('Would send to bot:', json);
+            toast('Открой бот в Telegram — напрямую с веба не отправить', true);
+          }
+        };
+
+        // DOWNLOAD submit
+        $('#dl-submit').addEventListener('click', () => {
+          const url = $('#dl-url').value.trim();
+          if (!url) {
+            haptic('medium');
+            toast('Вставь ссылку на видео', true);
+            return;
+          }
+          haptic('medium');
+          if (window.telegramAnalytics) {
+            try { window.telegramAnalytics.event('download_submit', { quality: getActiveQuality('#dl-quality') }); } catch (e) {}
+          }
+          sendToBot({
+            v: 1,
+            type: 'download',
+            url,
+            quality: getActiveQuality('#dl-quality'),
+          });
+        });
+
+        // SUBSCRIBE submit
+        $('#sub-submit').addEventListener('click', () => {
+          const url = $('#sub-url').value.trim();
+          if (!url) {
+            haptic('medium');
+            toast('Вставь ссылку на канал', true);
+            return;
+          }
+          haptic('medium');
+          if (window.telegramAnalytics) {
+            try { window.telegramAnalytics.event('subscribe_submit'); } catch (e) {}
+          }
+          sendToBot({ v: 1, type: 'subscribe', url });
+        });
+
+        // SETTINGS submit
+        $('#settings-submit').addEventListener('click', () => {
+          haptic('medium');
+          const q = getActiveQuality('#settings-quality');
+          if (window.telegramAnalytics) {
+            try { window.telegramAnalytics.event('quality_set', { quality: q }); } catch (e) {}
+          }
+          sendToBot({ v: 1, type: 'set_quality', quality: q });
+        });
+
+        // BackButton: close on tap
+        if (inTg && tg.BackButton) {
           try {
             tg.BackButton.onClick(() => tg.close());
             tg.BackButton.show();
