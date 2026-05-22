@@ -1,0 +1,113 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout
+  title="Как скачать YouTube Shorts и видео — бесплатный Telegram-бот"
+  description="Скачайте YouTube Shorts и обычные видео через бесплатный Telegram-бот. Качество до 1080p, извлечение аудио в MP3, поддержка ссылок youtu.be и подписка на каналы."
+>
+  <article class="max-w-3xl mx-auto px-4 py-12">
+    <nav class="text-sm text-neutral-500 mb-6">
+      <a href="/" class="hover:text-white">Главная</a> / <span class="text-neutral-300">YouTube</span>
+    </nav>
+
+    <h1 class="text-4xl md:text-5xl font-bold mb-4">Как скачать YouTube Shorts и видео</h1>
+    <p class="text-lg text-neutral-400 mb-10">
+      Бесплатный Telegram-бот для YouTube Shorts и обычных видео. Поддержка качества до 1080p, извлечение аудио в MP3 и автоматическая подписка на новые видео любого канала.
+    </p>
+
+    <section class="bg-gradient-to-br from-red-500/10 to-orange-500/10 border border-red-500/30 rounded-2xl p-6 mb-12">
+      <h2 class="font-bold text-xl mb-3">⚡ Быстрый старт</h2>
+      <ol class="space-y-2 text-neutral-300">
+        <li>1. Откройте <a href="https://t.me/SaveFastVideoFreebot" class="text-orange-400 underline">@SaveFastVideoFreebot</a>.</li>
+        <li>2. Скопируйте ссылку с YouTube (Shorts, обычное видео или youtu.be).</li>
+        <li>3. Отправьте в чат с ботом.</li>
+        <li>4. Получите видео в выбранном качестве (по умолчанию 720p).</li>
+      </ol>
+    </section>
+
+    <h2 class="text-2xl font-bold mt-12 mb-4">Какие YouTube-ссылки поддерживаются</h2>
+    <ul class="space-y-2 text-neutral-300 mb-8">
+      <li>✓ <code class="text-orange-400 text-sm">https://youtube.com/shorts/9ZXDv70GCUE</code> — YouTube Shorts (вертикальные)</li>
+      <li>✓ <code class="text-orange-400 text-sm">https://www.youtube.com/watch?v=abc12345</code> — обычные видео</li>
+      <li>✓ <code class="text-orange-400 text-sm">https://youtu.be/abc12345</code> — короткие ссылки</li>
+      <li>✓ <code class="text-orange-400 text-sm">https://m.youtube.com/watch?v=abc</code> — мобильные ссылки</li>
+      <li>✓ Просто <code>youtube.com/shorts/xxx</code> без https:// — тоже работает</li>
+    </ul>
+
+    <h2 class="text-2xl font-bold mt-12 mb-4">YouTube Shorts vs длинные видео</h2>
+    <div class="grid sm:grid-cols-2 gap-3 mb-8">
+      <div class="p-5 bg-green-500/10 border border-green-500/30 rounded-xl">
+        <div class="text-2xl mb-2">✅</div>
+        <h3 class="font-semibold mb-1">Shorts работают стабильно</h3>
+        <p class="text-sm text-neutral-400">Короткие вертикальные видео скачиваются без проблем в любом качестве.</p>
+      </div>
+      <div class="p-5 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+        <div class="text-2xl mb-2">⚠️</div>
+        <h3 class="font-semibold mb-1">Длинные — иногда</h3>
+        <p class="text-sm text-neutral-400">Длинные видео иногда упираются в login-wall YouTube (особенно 18+, music label content, age-restricted).</p>
+      </div>
+    </div>
+
+    <h2 class="text-2xl font-bold mt-12 mb-4">Скачать только звук (MP3)</h2>
+    <p class="text-neutral-400 mb-3">
+      Хотите вытащить аудио из YouTube-видео — лекцию, подкаст, музыку?
+    </p>
+    <ol class="space-y-2 text-neutral-300 mb-8 list-decimal pl-5">
+      <li>В чате с ботом — <strong>Меню → 🎛 Качество → 🎵 Только звук (mp3)</strong>.</li>
+      <li>Отправьте ссылку YouTube.</li>
+      <li>Получите MP3-файл с тегами автора и названия.</li>
+    </ol>
+    <p class="text-neutral-400 mb-8 text-sm">
+      <strong>Совет:</strong> чтобы вернуться к видео — там же в меню переключите на 1080p или 720p.
+    </p>
+
+    <h2 class="text-2xl font-bold mt-12 mb-4">Подписка на канал YouTube</h2>
+    <p class="text-neutral-400 mb-3">
+      Хотите автоматически получать новые видео любимого канала?
+    </p>
+    <pre class="bg-neutral-900 border border-neutral-800 rounded-xl p-4 mb-3 overflow-x-auto"><code>/subscribe https://youtube.com/@MrBeast</code></pre>
+    <p class="text-neutral-400 mb-8">
+      Бот будет проверять канал каждые 30 минут и присылать новые видео автоматически.
+      Полный список ваших подписок — <code>/subscriptions</code>. Отписаться — <code>/unsubscribe N</code>.
+    </p>
+
+    <h2 class="text-2xl font-bold mt-12 mb-4">Транскрипция YouTube-видео в текст</h2>
+    <p class="text-neutral-400 mb-3">
+      Команда <code>/transcript</code> распознает речь из видео и пришлёт текст:
+    </p>
+    <ol class="space-y-2 text-neutral-300 mb-8 list-decimal pl-5">
+      <li>Отправьте YouTube-ссылку обычным сообщением.</li>
+      <li>Ответьте на это сообщение командой <code>/transcript</code>.</li>
+      <li>Получите распознанный текст. Длинные транскрипции приходят файлом .txt.</li>
+    </ol>
+    <p class="text-neutral-400 mb-8 text-sm">
+      Распознавание идёт локально на наших серверах (faster-whisper, модель small). Поддерживаются русский, английский и 40+ других языков.
+    </p>
+
+    <h2 class="text-2xl font-bold mt-12 mb-4">Часто задаваемые вопросы</h2>
+    <div class="space-y-3 mb-12">
+      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5">
+        <summary class="font-semibold cursor-pointer">Почему длинное видео не скачивается?</summary>
+        <p class="mt-3 text-sm text-neutral-400">YouTube требует логин для некоторых видео (возрастные ограничения, контент с авторскими правами). Бот работает без логина, поэтому такие видео могут не пройти. YouTube Shorts таких ограничений почти не имеет.</p>
+      </details>
+      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5">
+        <summary class="font-semibold cursor-pointer">Есть ли лимит на размер видео?</summary>
+        <p class="mt-3 text-sm text-neutral-400">50 МБ — лимит Telegram на отправку файла ботом. Это примерно 5-7 минут видео в 720p, 3-4 минуты в 1080p. Если видео больше — попробуйте качество 480p или audio-only.</p>
+      </details>
+      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5">
+        <summary class="font-semibold cursor-pointer">Можно ли скачать целый плейлист?</summary>
+        <p class="mt-3 text-sm text-neutral-400">Пока нет — Telegram-боты ограничены по размеру файлов и времени обработки, плейлист с 50 видео занял бы часы. Возможно добавим в будущем как Premium фичу.</p>
+      </details>
+    </div>
+
+    <div class="bg-gradient-to-br from-orange-500/10 to-pink-500/10 border border-orange-500/30 rounded-3xl p-8 text-center">
+      <h2 class="text-2xl font-bold mb-3">Скачать YouTube — бесплатно</h2>
+      <a
+        href="https://t.me/SaveFastVideoFreebot"
+        class="inline-flex items-center gap-2 px-8 py-4 bg-orange-500 hover:bg-orange-400 text-black font-semibold rounded-xl transition"
+      >
+        🚀 Открыть бот @SaveFastVideoFreebot
+      </a>
+    </div>
+  </article>
+</Layout>

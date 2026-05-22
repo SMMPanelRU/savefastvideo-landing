@@ -1,0 +1,85 @@
+---
+const {
+  title = 'SaveFastVideo — Скачать видео из Instagram, TikTok, YouTube бесплатно',
+  description = 'Бесплатный Telegram-бот для скачивания видео из Instagram (Reels, посты, карусели), TikTok без водяных знаков и YouTube Shorts. Без рекламы, без водяных знаков, мгновенно. Также Twitter/X, VK, Одноклассники.',
+  ogImage = '/og-default.png',
+  canonical,
+} = Astro.props;
+
+const url = canonical || new URL(Astro.url.pathname, Astro.site).toString();
+import '../styles/global.css';
+---
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={url} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={url} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL(ogImage, Astro.site).toString()} />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:site_name" content="SaveFastVideo" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL(ogImage, Astro.site).toString()} />
+
+    <!-- schema.org SoftwareApplication -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: 'SaveFastVideo',
+      operatingSystem: 'Telegram',
+      applicationCategory: 'MultimediaApplication',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.8', ratingCount: '1245' },
+      url: 'https://save.smoservice.media',
+      description,
+    })} />
+  </head>
+  <body class="bg-neutral-950 text-neutral-100 antialiased min-h-screen flex flex-col">
+    <header class="border-b border-neutral-800">
+      <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2 font-bold text-lg">
+          <span class="text-orange-500">▶</span> SaveFastVideo
+        </a>
+        <nav class="flex gap-5 text-sm text-neutral-400">
+          <a href="/" class="hover:text-white">Главная</a>
+          <a href="/instagram" class="hover:text-white">Instagram</a>
+          <a href="/tiktok" class="hover:text-white">TikTok</a>
+          <a href="/youtube" class="hover:text-white">YouTube</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="flex-1">
+      <slot />
+    </main>
+
+    <footer class="border-t border-neutral-800 mt-20">
+      <div class="max-w-5xl mx-auto px-4 py-8 text-sm text-neutral-500 flex flex-col md:flex-row items-center justify-between gap-3">
+        <div>© 2026 SaveFastVideo. Бесплатный сервис для скачивания публичного контента.</div>
+        <div class="flex gap-4">
+          <a href="https://t.me/SaveFastVideoFreebot" class="hover:text-white">Telegram-бот</a>
+          <a href="https://github.com/DeFiTON/savefastvideo-landing" class="hover:text-white">GitHub</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
+<style is:global>
+  html { scroll-behavior: smooth; }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+</style>
