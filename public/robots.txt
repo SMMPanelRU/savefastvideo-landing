@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://save.smoservice.media/sitemap-index.xml

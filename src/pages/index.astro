@@ -1,17 +1,183 @@
 ---
-
+import Layout from '../layouts/Layout.astro';
 ---
+<Layout
+  title="SaveFastVideo — Скачать видео из Instagram, TikTok, YouTube бесплатно"
+  description="Бесплатный Telegram-бот для скачивания видео из Instagram (Reels, посты, карусели), TikTok без водяных знаков и YouTube Shorts. Также Twitter/X, VK, Одноклассники. Без рекламы, мгновенно."
+>
+  <!-- Hero -->
+  <section class="max-w-5xl mx-auto px-4 pt-16 pb-20 text-center">
+    <h1 class="text-4xl md:text-6xl font-bold tracking-tight">
+      Скачайте видео из соцсетей
+      <span class="block mt-2 bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
+        в один клик
+      </span>
+    </h1>
+    <p class="mt-6 text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto">
+      Бесплатный Telegram-бот: Instagram Reels, посты, карусели • TikTok без водяных знаков • YouTube Shorts
+    </p>
+    <div class="mt-10 flex flex-col sm:flex-row gap-3 justify-center">
+      <a
+        href="https://t.me/SaveFastVideoFreebot"
+        class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-orange-500 hover:bg-orange-400 text-black font-semibold rounded-xl transition"
+      >
+        🚀 Открыть в Telegram
+      </a>
+      <a
+        href="#how"
+        class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-xl"
+      >
+        Как работает
+      </a>
+    </div>
+    <div class="mt-6 text-sm text-neutral-500">
+      • Без водяных знаков • Без рекламы • Бесплатно
+    </div>
+  </section>
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+  <!-- Features -->
+  <section class="max-w-5xl mx-auto px-4 pb-20">
+    <h2 class="text-3xl font-bold text-center mb-12">Что умеет бот</h2>
+    <div class="grid md:grid-cols-3 gap-5">
+      {[
+        ['📥', 'Скачивание видео', 'Reels, TikTok, YouTube Shorts, Twitter/X, VK — без водяных знаков и в исходном качестве.'],
+        ['🖼', 'Карусели Instagram', 'Multi-photo и mixed (видео + фото) посты приходят полным альбомом, а не одним файлом.'],
+        ['🎙', 'Видео в текст', '/transcript — превратит звуковую дорожку в текст. Поддержка ru/en и 40+ языков. Локальная модель.'],
+        ['🔔', 'Подписка на каналы', '/subscribe — следите за YouTube и VK-каналами. Новые посты приходят автоматически.'],
+        ['🎛', 'Выбор качества', '1080p / 720p / 480p / только звук (mp3) — настраивается раз и запоминается.'],
+        ['🆓', 'Полностью бесплатно', 'Без подписки, без скрытых платежей. Поддерживаем подпиской на партнёрские каналы.'],
+      ].map(([emoji, title, body]) => (
+        <div class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl">
+          <div class="text-3xl mb-3">{emoji}</div>
+          <h3 class="font-semibold text-lg mb-2">{title}</h3>
+          <p class="text-sm text-neutral-400">{body}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Platforms -->
+  <section class="max-w-5xl mx-auto px-4 pb-20">
+    <h2 class="text-3xl font-bold text-center mb-12">Поддерживаемые платформы</h2>
+    <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-3 text-center">
+      <a href="/instagram" class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl hover:bg-neutral-800 transition">
+        <div class="text-3xl mb-2">🟣</div>
+        <div class="font-semibold">Instagram</div>
+        <div class="text-sm text-neutral-500 mt-1">Reels, посты, карусели</div>
+      </a>
+      <a href="/tiktok" class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl hover:bg-neutral-800 transition">
+        <div class="text-3xl mb-2">⚫</div>
+        <div class="font-semibold">TikTok</div>
+        <div class="text-sm text-neutral-500 mt-1">Без водяных знаков</div>
+      </a>
+      <a href="/youtube" class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl hover:bg-neutral-800 transition">
+        <div class="text-3xl mb-2">🔴</div>
+        <div class="font-semibold">YouTube</div>
+        <div class="text-sm text-neutral-500 mt-1">Shorts и обычные</div>
+      </a>
+      <div class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl">
+        <div class="text-3xl mb-2">✖️</div>
+        <div class="font-semibold">Twitter / X</div>
+        <div class="text-sm text-neutral-500 mt-1">Видео и фото</div>
+      </div>
+      <div class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl">
+        <div class="text-3xl mb-2">🔵</div>
+        <div class="font-semibold">VK</div>
+        <div class="text-sm text-neutral-500 mt-1">Видео и клипы</div>
+      </div>
+      <div class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl">
+        <div class="text-3xl mb-2">🧡</div>
+        <div class="font-semibold">Одноклассники</div>
+        <div class="text-sm text-neutral-500 mt-1">Видео из ОК</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How -->
+  <section id="how" class="max-w-5xl mx-auto px-4 pb-20">
+    <h2 class="text-3xl font-bold text-center mb-12">Как пользоваться</h2>
+    <ol class="grid md:grid-cols-3 gap-5 list-none p-0">
+      <li class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl">
+        <div class="w-10 h-10 rounded-full bg-orange-500 text-black font-bold flex items-center justify-center mb-3">1</div>
+        <h3 class="font-semibold mb-2">Откройте бот</h3>
+        <p class="text-sm text-neutral-400">Нажмите «Открыть в Telegram» — бот откроется в приложении.</p>
+      </li>
+      <li class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl">
+        <div class="w-10 h-10 rounded-full bg-orange-500 text-black font-bold flex items-center justify-center mb-3">2</div>
+        <h3 class="font-semibold mb-2">Отправьте ссылку</h3>
+        <p class="text-sm text-neutral-400">Скопируйте URL видео и отправьте в чат. Можно с https:// и без.</p>
+      </li>
+      <li class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl">
+        <div class="w-10 h-10 rounded-full bg-orange-500 text-black font-bold flex items-center justify-center mb-3">3</div>
+        <h3 class="font-semibold mb-2">Получите файл</h3>
+        <p class="text-sm text-neutral-400">Через несколько секунд бот пришлёт готовое видео — без водяных знаков.</p>
+      </li>
+    </ol>
+  </section>
+
+  <!-- FAQ -->
+  <section class="max-w-3xl mx-auto px-4 pb-20">
+    <h2 class="text-3xl font-bold text-center mb-12">Частые вопросы</h2>
+    <div class="space-y-3">
+      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 group">
+        <summary class="font-semibold cursor-pointer">Это правда бесплатно?</summary>
+        <p class="mt-3 text-sm text-neutral-400">Да. Бот полностью бесплатный, без скрытых платежей и подписок. Поддерживается за счёт партнёрских каналов — иногда бот предложит подписаться для продолжения работы.</p>
+      </details>
+      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 group">
+        <summary class="font-semibold cursor-pointer">Есть ли водяные знаки на скачанных видео?</summary>
+        <p class="mt-3 text-sm text-neutral-400">Нет. Видео из TikTok приходят без логотипа TikTok, Instagram Reels — без водяного знака IG.</p>
+      </details>
+      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 group">
+        <summary class="font-semibold cursor-pointer">Какое максимальное качество?</summary>
+        <p class="mt-3 text-sm text-neutral-400">1080p Full HD — настраивается в меню → 🎛 Качество. Также есть 720p, 480p и «только звук» (mp3).</p>
+      </details>
+      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 group">
+        <summary class="font-semibold cursor-pointer">Можно ли скачать длинное YouTube видео?</summary>
+        <p class="mt-3 text-sm text-neutral-400">YouTube Shorts — да, стабильно. Длинные видео иногда упираются в login wall YouTube — лучше Shorts.</p>
+      </details>
+      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 group">
+        <summary class="font-semibold cursor-pointer">Что такое карусель в Instagram?</summary>
+        <p class="mt-3 text-sm text-neutral-400">Карусель — пост с несколькими фотографиями или mixed-пост (видео + фото). Наш бот отправляет весь набор как media-альбом, а не один файл.</p>
+      </details>
+      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 group">
+        <summary class="font-semibold cursor-pointer">Можно ли скачать Instagram Stories?</summary>
+        <p class="mt-3 text-sm text-neutral-400">Нет. Stories требуют доступа к Instagram-аккаунту, что нарушает их правила. Бот работает только с публичным контентом.</p>
+      </details>
+      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 group">
+        <summary class="font-semibold cursor-pointer">Как работает подписка на канал?</summary>
+        <p class="mt-3 text-sm text-neutral-400">Команда <code>/subscribe https://youtube.com/@channel</code> — и бот будет автоматически присылать новые видео этого канала в чат каждые 30 минут. Поддерживается YouTube и VK.</p>
+      </details>
+    </div>
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: [
+        ['Это правда бесплатно?', 'Да. Бот полностью бесплатный, без скрытых платежей.'],
+        ['Есть ли водяные знаки?', 'Нет — TikTok и Instagram без watermark.'],
+        ['Максимальное качество?', '1080p Full HD; есть также 720p, 480p и audio-only (mp3).'],
+        ['Длинные YouTube?', 'YouTube Shorts стабильно; длинные часто требуют login.'],
+        ['Что такое карусель?', 'Пост с несколькими фото или mixed video+photo — приходит media-альбомом.'],
+        ['Instagram Stories?', 'Нет — Stories требуют доступа к чужому IG-аккаунту.'],
+        ['Подписка на канал?', '/subscribe — бот шлёт новые видео автоматически.'],
+      ].map(([q, a]) => ({
+        '@type': 'Question',
+        name: q,
+        acceptedAnswer: { '@type': 'Answer', text: a },
+      })),
+    })} />
+  </section>
+
+  <!-- CTA -->
+  <section class="max-w-3xl mx-auto px-4 pb-24 text-center">
+    <div class="bg-gradient-to-br from-orange-500/10 to-pink-500/10 border border-orange-500/30 rounded-3xl p-10">
+      <h2 class="text-3xl font-bold mb-3">Готово — открывайте бот</h2>
+      <p class="text-neutral-400 mb-6">Без регистрации, без рекламы. Просто отправьте ссылку.</p>
+      <a
+        href="https://t.me/SaveFastVideoFreebot"
+        class="inline-flex items-center gap-2 px-8 py-4 bg-orange-500 hover:bg-orange-400 text-black font-semibold rounded-xl transition"
+      >
+        🚀 @SaveFastVideoFreebot
+      </a>
+    </div>
+  </section>
+</Layout>

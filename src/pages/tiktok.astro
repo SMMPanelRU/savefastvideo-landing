@@ -1,0 +1,88 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout
+  title="Как скачать видео из TikTok без водяного знака — бесплатно"
+  description="Скачайте TikTok-видео без логотипа TikTok через бесплатный Telegram-бот. Инструкция в 3 шага, поддержка ссылок без https://, качество до 1080p, без рекламы."
+>
+  <article class="max-w-3xl mx-auto px-4 py-12">
+    <nav class="text-sm text-neutral-500 mb-6">
+      <a href="/" class="hover:text-white">Главная</a> / <span class="text-neutral-300">TikTok</span>
+    </nav>
+
+    <h1 class="text-4xl md:text-5xl font-bold mb-4">Как скачать TikTok-видео без водяного знака</h1>
+    <p class="text-lg text-neutral-400 mb-10">
+      В TikTok приложении на каждом скачанном видео остаётся водяной знак с логотипом и никнеймом. Через наш Telegram-бот видео приходит чистым — без вотермарка, в исходном качестве.
+    </p>
+
+    <section class="bg-gradient-to-br from-pink-500/10 to-cyan-500/10 border border-pink-500/30 rounded-2xl p-6 mb-12">
+      <h2 class="font-bold text-xl mb-3">⚡ Быстрый старт</h2>
+      <ol class="space-y-2 text-neutral-300">
+        <li>1. Откройте <a href="https://t.me/SaveFastVideoFreebot" class="text-orange-400 underline">@SaveFastVideoFreebot</a>.</li>
+        <li>2. В TikTok-приложении нажмите «Поделиться → Копировать ссылку» (или скопируйте URL из браузера).</li>
+        <li>3. Вставьте ссылку в чат с ботом. Можно с <code>https://</code> и без.</li>
+        <li>4. Через 2-3 секунды получите видео без логотипа TikTok.</li>
+      </ol>
+    </section>
+
+    <h2 class="text-2xl font-bold mt-12 mb-4">Какие ссылки работают</h2>
+    <p class="text-neutral-400 mb-3">Бот понимает любой формат TikTok-ссылок:</p>
+    <ul class="space-y-2 text-neutral-300 mb-8">
+      <li>✓ <code class="text-orange-400 text-sm">https://www.tiktok.com/@username/video/1234567890</code> — полная ссылка</li>
+      <li>✓ <code class="text-orange-400 text-sm">tiktok.com/@username/video/1234567890</code> — без https://</li>
+      <li>✓ <code class="text-orange-400 text-sm">https://vm.tiktok.com/ZMxxxxxx/</code> — короткая ссылка из мобильного приложения</li>
+      <li>✓ <code class="text-orange-400 text-sm">https://www.tiktok.com/t/ZTxxxxxx/</code> — share-ссылка</li>
+    </ul>
+
+    <h2 class="text-2xl font-bold mt-12 mb-4">Качество и форматы</h2>
+    <ul class="space-y-2 text-neutral-400 mb-8">
+      <li>📺 По умолчанию — <strong class="text-neutral-200">720p HD</strong> (можно переключить в меню → 🎛 Качество).</li>
+      <li>🎵 «Только звук» — извлечёт аудиодорожку как MP3 (для музыки из TikTok-видео).</li>
+      <li>📝 К видео прилагается описание автора и количество просмотров.</li>
+    </ul>
+
+    <h2 class="text-2xl font-bold mt-12 mb-4">Что бот не сделает</h2>
+    <ul class="space-y-2 text-neutral-400 mb-8">
+      <li>❌ TikTok-видео из приватных аккаунтов (требуют логин в TikTok).</li>
+      <li>❌ TikTok LIVE (прямые эфиры) — они не сохраняются на серверах TikTok.</li>
+      <li>❌ Удалённые или ограниченные в вашей стране видео.</li>
+    </ul>
+
+    <h2 class="text-2xl font-bold mt-12 mb-4">Зачем нужен водяной знак — и почему его нет в скачанных через бот</h2>
+    <p class="text-neutral-400 mb-3">
+      TikTok добавляет logo+никнейм на каждое видео скачанное через приложение — это маркетинг (приходит трафик на TikTok из любых re-share).
+      Когда бот тянет видео через прямой API, он получает <strong class="text-neutral-200">оригинальный файл с серверов TikTok без overlay</strong>.
+      Поэтому видео приходит чистым.
+    </p>
+    <p class="text-neutral-400 mb-8">
+      Это легально: контент остаётся принадлежащим автору, мы только убираем брендинговую плашку TikTok с публичного видео.
+      Для коммерческого использования всё равно стоит спросить разрешение у автора.
+    </p>
+
+    <h2 class="text-2xl font-bold mt-12 mb-4">Часто задаваемые вопросы</h2>
+    <div class="space-y-3 mb-12">
+      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5">
+        <summary class="font-semibold cursor-pointer">Это легально?</summary>
+        <p class="mt-3 text-sm text-neutral-400">Скачивание публичного контента для личного использования — да. Перепубликация без разрешения автора — нет. Бот не нарушает правила TikTok потому что использует публичные методы, доступные любому.</p>
+      </details>
+      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5">
+        <summary class="font-semibold cursor-pointer">Сколько занимает скачивание?</summary>
+        <p class="mt-3 text-sm text-neutral-400">2-5 секунд для обычного TikTok-видео. Длинные видео (>1 минута) — до 10-15 секунд.</p>
+      </details>
+      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5">
+        <summary class="font-semibold cursor-pointer">Будет ли это работать в России / РБ / КЗ?</summary>
+        <p class="mt-3 text-sm text-neutral-400">Да, Telegram-бот работает везде, где доступен Telegram. Если TikTok заблокирован в стране — бот всё равно скачает видео, потому что соединение идёт с наших серверов, а не с вашего устройства.</p>
+      </details>
+    </div>
+
+    <div class="bg-gradient-to-br from-orange-500/10 to-pink-500/10 border border-orange-500/30 rounded-3xl p-8 text-center">
+      <h2 class="text-2xl font-bold mb-3">Попробуйте — это бесплатно</h2>
+      <a
+        href="https://t.me/SaveFastVideoFreebot"
+        class="inline-flex items-center gap-2 px-8 py-4 bg-orange-500 hover:bg-orange-400 text-black font-semibold rounded-xl transition"
+      >
+        🚀 Открыть бот @SaveFastVideoFreebot
+      </a>
+    </div>
+  </article>
+</Layout>
