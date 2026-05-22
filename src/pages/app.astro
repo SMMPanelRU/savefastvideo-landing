@@ -1,6 +1,9 @@
 ---
 // Telegram Mini App — hosted at save.smoservice.media/app
 // Pure HTML+JS, no backend calls. UI shortcuts that open bot commands.
+// Analytics: Telegram Mini Apps Analytics SDK (https://tganalytics.xyz).
+// Build-time env: PUBLIC_TG_ANALYTICS_TOKEN — set in Coolify, no token = SDK no-op.
+const tgAnalyticsToken = import.meta.env.PUBLIC_TG_ANALYTICS_TOKEN || '';
 ---
 <!doctype html>
 <html lang="ru">
@@ -10,6 +13,13 @@
     <title>SaveFastVideo</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    {tgAnalyticsToken && (
+      <script
+        async
+        src="https://tganalytics.xyz/index.js"
+        type="text/javascript"
+      />
+    )}
     <style>
       :root {
         --bg: #0a0a0a;
@@ -155,6 +165,32 @@
       <a href="/">Сайт</a>
     </footer>
 
+    <script is:inline define:vars={{ tgAnalyticsToken }}>
+      // Init Telegram Mini Apps Analytics SDK if token configured.
+      // SDK auto-tracks: open/close, button taps, link opens. Custom events
+      // via window.telegramAnalytics.event('name', { props }).
+      function _initTgAnalytics() {
+        if (!tgAnalyticsToken || !window.telegramAnalytics) return;
+        try {
+          window.telegramAnalytics.init({
+            token: tgAnalyticsToken,
+            appName: 'savefastvideo',
+          });
+        } catch (e) { console.warn('tga init failed', e); }
+      }
+      if (window.telegramAnalytics) {
+        _initTgAnalytics();
+      } else {
+        // SDK script is async — wait for it
+        let tries = 0;
+        const iv = setInterval(() => {
+          if (window.telegramAnalytics || tries++ > 50) {
+            clearInterval(iv);
+            _initTgAnalytics();
+          }
+        }, 100);
+      }
+    </script>
     <script is:inline>
       (function () {
         const tg = window.Telegram && window.Telegram.WebApp;
@@ -184,6 +220,10 @@
         document.querySelectorAll('.action').forEach(btn => {
           btn.addEventListener('click', () => {
             const action = btn.getAttribute('data-action');
+            // analytics event
+            if (window.telegramAnalytics) {
+              try { window.telegramAnalytics.event('action_tap', { action }); } catch (e) {}
+            }
             // haptic if in TG
             if (inTelegram && tg.HapticFeedback) {
               try { tg.HapticFeedback.impactOccurred('light'); } catch (e) {}
