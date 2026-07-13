@@ -167,6 +167,88 @@ const tgAnalyticsToken = import.meta.env.PUBLIC_TG_ANALYTICS_TOKEN || '';
         color: var(--muted);
       }
       .platform .emoji { font-size: 20px; display: block; margin-bottom: 2px; }
+      /* ─── Browser mode: auth + results ─── */
+      .auth-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 32px 24px;
+        text-align: center;
+        margin-top: 8vh;
+      }
+      .auth-card .icon {
+        width: 64px; height: 64px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--accent), #fbbf24);
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 28px; color: #000; font-weight: 800;
+        margin-bottom: 16px;
+      }
+      .auth-card h1 { font-size: 22px; margin: 0 0 8px; letter-spacing: -0.02em; }
+      .auth-card p { color: var(--muted); font-size: 14px; margin: 0 0 24px; }
+      .btn-tg {
+        width: 100%;
+        background: #2aabee;
+        color: #fff;
+        font-weight: 700;
+        font-size: 16px;
+        padding: 15px;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-family: inherit;
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      }
+      .btn-tg:active { transform: scale(0.98); }
+      .btn-tg:disabled { opacity: 0.6; }
+      #tg-widget { display: flex; justify-content: center; margin-bottom: 12px; min-height: 0; }
+      #tg-widget iframe { border-radius: 12px; }
+      .auth-status { font-size: 13px; color: var(--muted); margin-top: 14px; min-height: 18px; }
+      .userbar {
+        display: flex; align-items: center; justify-content: space-between;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px 14px;
+        margin-bottom: 16px;
+        font-size: 14px;
+      }
+      .userbar .who { font-weight: 600; }
+      .userbar .who span { color: var(--muted); font-weight: 400; }
+      .userbar button {
+        background: none; border: none; color: var(--muted);
+        font-size: 13px; cursor: pointer; font-family: inherit;
+        text-decoration: underline; padding: 0;
+      }
+      .result-item {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-top: 10px;
+      }
+      .result-item .meta { min-width: 0; }
+      .result-item .name {
+        font-size: 14px; font-weight: 600;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .result-item .size { font-size: 12px; color: var(--muted); }
+      .result-item a {
+        flex-shrink: 0;
+        background: var(--accent); color: #000;
+        font-size: 13px; font-weight: 700;
+        padding: 10px 14px; border-radius: 10px;
+        text-decoration: none;
+      }
+      .spin {
+        display: inline-block; width: 14px; height: 14px;
+        border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin .7s linear infinite;
+        vertical-align: -2px; margin-right: 6px;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
       .toast {
         position: fixed;
         bottom: 32px;
@@ -203,6 +285,24 @@ const tgAnalyticsToken = import.meta.env.PUBLIC_TG_ANALYTICS_TOKEN || '';
       <p>Скачивание видео из соцсетей</p>
     </header>
 
+    <!-- BROWSER AUTH (показывается только вне Telegram, до входа) -->
+    <section id="auth" class="auth-card" hidden>
+      <div class="icon">▶</div>
+      <h1>SaveFastVideo</h1>
+      <p>Войдите через Telegram — без пароля.<br/>Скачивание видео прямо в браузер.</p>
+      <div id="tg-widget"></div>
+      <button class="btn-tg" id="bot-login" type="button">
+        ✈️ Войти через Telegram
+      </button>
+      <div class="auth-status" id="auth-status"></div>
+      <p style="margin:20px 0 0; font-size:12px;">Или откройте Mini App в нашем боте: <a href="https://t.me/SaveFastVideoFreebot" style="color:var(--accent); text-decoration:none;">@SaveFastVideoFreebot</a></p>
+    </section>
+
+    <div class="userbar" id="userbar" hidden>
+      <div class="who" id="userbar-name"></div>
+      <button type="button" id="logout">Выйти</button>
+    </div>
+
     <div class="tabs" role="tablist">
       <button class="tab active" data-tab="download" type="button">📥 Скачать</button>
       <button class="tab" data-tab="subscribe" type="button">🔔 Подписки</button>
@@ -225,9 +325,10 @@ const tgAnalyticsToken = import.meta.env.PUBLIC_TG_ANALYTICS_TOKEN || '';
         </div>
       </div>
       <button class="btn" id="dl-submit" type="button">Скачать в чат</button>
-      <p style="color:var(--muted); font-size:13px; margin-top:14px; text-align:center;">
+      <p style="color:var(--muted); font-size:13px; margin-top:14px; text-align:center;" id="dl-hint">
         Результат придёт сообщением в чат с ботом.
       </p>
+      <div id="dl-results"></div>
 
       <h2 style="font-size:14px; color:var(--muted); margin:24px 0 10px; text-transform:uppercase; letter-spacing:0.04em; font-weight:500;">Поддерживаемые платформы</h2>
       <div class="platforms">
@@ -380,21 +481,191 @@ const tgAnalyticsToken = import.meta.env.PUBLIC_TG_ANALYTICS_TOKEN || '';
           return active ? active.getAttribute('data-q') : '720';
         };
 
-        // send to bot via WebApp.sendData OR fallback (open bot with deep-link)
+        // ─── Browser auth (вне Telegram) ─────────────────────────────────
+        const BOT_USERNAME = 'SaveFastVideoFreebot';
+        const SESSION_KEY = 'sfv_session';
+        let session = null; // {token, user}
+
+        const loadSession = () => {
+          try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }
+          catch (e) { return null; }
+        };
+        const saveSession = (s) => {
+          session = s;
+          if (s) localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+          else localStorage.removeItem(SESSION_KEY);
+        };
+
+        const api = async (path, opts) => {
+          const o = opts || {};
+          const headers = Object.assign(
+            { 'Content-Type': 'application/json' },
+            session ? { 'Authorization': 'Bearer ' + session.token } : {},
+            o.headers || {}
+          );
+          const res = await fetch(path, Object.assign({}, o, { headers }));
+          let data = null;
+          try { data = await res.json(); } catch (e) {}
+          if (res.status === 401) { saveSession(null); setMode(); }
+          return { ok: res.ok, status: res.status, data };
+        };
+
+        const showBrowserApp = () => {
+          $('#auth').hidden = true;
+          $('#userbar').hidden = false;
+          const u = session.user || {};
+          $('#userbar-name').innerHTML =
+            '👤 ' + (u.first_name || 'Пользователь') +
+            (u.username ? ' <span>@' + u.username + '</span>' : '');
+          document.querySelector('.tabs').style.display = '';
+          $$('.pane').forEach(p => p.style.display = '');
+          $('#dl-submit').textContent = '⬇️ Скачать';
+          $('#dl-hint').textContent = 'Файл скачается прямо в браузер.';
+        };
+
+        const showAuthGate = () => {
+          $('#auth').hidden = false;
+          $('#userbar').hidden = true;
+          document.querySelector('.tabs').style.display = 'none';
+          $$('.pane').forEach(p => p.style.display = 'none');
+        };
+
+        const setMode = () => {
+          if (inTg) return; // Mini App — всё как было
+          if (session) showBrowserApp();
+          else showAuthGate();
+        };
+
+        // Telegram Login Widget (требует /setdomain у BotFather; если домен
+        // не привязан — виджет просто не отрисуется, останется кнопка бота)
+        window.onTelegramAuth = async (user) => {
+          const r = await api('/api/auth/telegram', { method: 'POST', body: JSON.stringify(user) });
+          if (r.ok && r.data && r.data.token) {
+            saveSession({ token: r.data.token, user: r.data.user });
+            setMode();
+            toast('Добро пожаловать, ' + (r.data.user.first_name || '') + '!');
+          } else {
+            toast('Не удалось войти — попробуй через бота', true);
+          }
+        };
+
+        const mountWidget = () => {
+          const s = document.createElement('script');
+          s.src = 'https://telegram.org/js/telegram-widget.js?22';
+          s.setAttribute('data-telegram-login', BOT_USERNAME);
+          s.setAttribute('data-size', 'large');
+          s.setAttribute('data-radius', '12');
+          s.setAttribute('data-onauth', 'onTelegramAuth(user)');
+          s.setAttribute('data-request-access', 'write');
+          $('#tg-widget').appendChild(s);
+        };
+
+        // Вход через бота (deep-link + поллинг) — работает всегда
+        let pollTimer = null;
+        $('#bot-login') && $('#bot-login').addEventListener('click', async () => {
+          const btn = $('#bot-login');
+          btn.disabled = true;
+          btn.innerHTML = '<span class="spin"></span> Ожидаю подтверждения…';
+          $('#auth-status').textContent = 'Открой бота и нажми START — вход подтвердится сам.';
+          const r = await api('/api/auth/bot-start', { method: 'POST', body: '{}' });
+          if (!r.ok || !r.data || !r.data.link) {
+            btn.disabled = false;
+            btn.textContent = '✈️ Войти через Telegram';
+            toast('Сервис входа недоступен, попробуй позже', true);
+            return;
+          }
+          window.open(r.data.link, '_blank');
+          const code = r.data.code;
+          $('#auth-status').innerHTML =
+            'Код этой сессии: <b style="color:var(--text); letter-spacing:2px;">' +
+            (r.data.short || '—') +
+            '</b><br/>Открой бота и подтверди вход, если код совпадает.';
+          const started = Date.now();
+          clearInterval(pollTimer);
+          pollTimer = setInterval(async () => {
+            if (Date.now() - started > 5 * 60 * 1000) {
+              clearInterval(pollTimer);
+              btn.disabled = false;
+              btn.textContent = '✈️ Войти через Telegram';
+              $('#auth-status').textContent = 'Время вышло — нажми ещё раз.';
+              return;
+            }
+            const p = await api('/api/auth/bot-poll?code=' + code);
+            if (p.data && p.data.status === 'ok') {
+              clearInterval(pollTimer);
+              saveSession({ token: p.data.token, user: p.data.user });
+              setMode();
+              toast('Добро пожаловать, ' + (p.data.user.first_name || '') + '!');
+            } else if (p.data && p.data.status === 'expired') {
+              clearInterval(pollTimer);
+              btn.disabled = false;
+              btn.textContent = '✈️ Войти через Telegram';
+              $('#auth-status').textContent = 'Код устарел — нажми ещё раз.';
+            }
+          }, 2000);
+        });
+
+        $('#logout') && $('#logout').addEventListener('click', () => {
+          saveSession(null);
+          setMode();
+        });
+
+        // ─── Отправка действий: Mini App → sendData, браузер → API ───────
         const sendToBot = (payload) => {
           const json = JSON.stringify(payload);
-          if (inTg && typeof tg.sendData === 'function') {
-            try {
-              tg.sendData(json);
-              // sendData auto-closes the mini-app in TG client
-            } catch (e) {
-              console.error('sendData failed', e);
-              toast('Не удалось отправить — открой бот вручную', true);
+          try {
+            tg.sendData(json); // sendData auto-closes the mini-app in TG client
+          } catch (e) {
+            console.error('sendData failed', e);
+            toast('Не удалось отправить — открой бот вручную', true);
+          }
+        };
+
+        const fmtSize = (bytes) => {
+          if (!bytes) return '';
+          const mb = bytes / 1048576;
+          return mb >= 1 ? mb.toFixed(1) + ' MB' : Math.round(bytes / 1024) + ' KB';
+        };
+
+        const browserDownload = async (url, quality) => {
+          const btn = $('#dl-submit');
+          btn.disabled = true;
+          btn.innerHTML = '<span class="spin"></span> Скачиваю…';
+          $('#dl-results').innerHTML = '';
+          try {
+            const r = await api('/api/download', {
+              method: 'POST',
+              body: JSON.stringify({ url, quality }),
+            });
+            if (!r.ok) {
+              toast((r.data && r.data.message) || 'Не удалось скачать', true);
+              return;
             }
-          } else {
-            // outside TG — show what would be sent + link
-            console.log('Would send to bot:', json);
-            toast('Открой бот в Telegram — напрямую с веба не отправить', true);
+            const items = (r.data && r.data.items) || [];
+            const box = $('#dl-results');
+            items.forEach((it, i) => {
+              const row = document.createElement('div');
+              row.className = 'result-item';
+              row.innerHTML =
+                '<div class="meta"><div class="name">' +
+                (it.filename || 'файл ' + (i + 1)) +
+                '</div><div class="size">' + fmtSize(it.size) + '</div></div>';
+              const a = document.createElement('a');
+              a.href = '/api/file/' + it.token;
+              a.textContent = '⬇️ Сохранить';
+              a.setAttribute('download', it.filename || '');
+              row.appendChild(a);
+              box.appendChild(row);
+            });
+            if (items.length === 1) {
+              // один файл — сразу дёргаем скачивание
+              const a = box.querySelector('a');
+              if (a) a.click();
+            }
+            toast(items.length > 1 ? 'Готово: ' + items.length + ' файла(ов)' : 'Готово!');
+          } finally {
+            btn.disabled = false;
+            btn.textContent = '⬇️ Скачать';
           }
         };
 
@@ -410,16 +681,16 @@ const tgAnalyticsToken = import.meta.env.PUBLIC_TG_ANALYTICS_TOKEN || '';
           if (window.telegramAnalytics) {
             try { window.telegramAnalytics.event('download_submit', { quality: getActiveQuality('#dl-quality') }); } catch (e) {}
           }
-          sendToBot({
-            v: 1,
-            type: 'download',
-            url,
-            quality: getActiveQuality('#dl-quality'),
-          });
+          const quality = getActiveQuality('#dl-quality');
+          if (inTg) {
+            sendToBot({ v: 1, type: 'download', url, quality });
+          } else {
+            browserDownload(url, quality);
+          }
         });
 
         // SUBSCRIBE submit
-        $('#sub-submit').addEventListener('click', () => {
+        $('#sub-submit').addEventListener('click', async () => {
           const url = $('#sub-url').value.trim();
           if (!url) {
             haptic('medium');
@@ -430,18 +701,47 @@ const tgAnalyticsToken = import.meta.env.PUBLIC_TG_ANALYTICS_TOKEN || '';
           if (window.telegramAnalytics) {
             try { window.telegramAnalytics.event('subscribe_submit'); } catch (e) {}
           }
-          sendToBot({ v: 1, type: 'subscribe', url });
+          if (inTg) {
+            sendToBot({ v: 1, type: 'subscribe', url });
+            return;
+          }
+          const r = await api('/api/subscribe', { method: 'POST', body: JSON.stringify({ url }) });
+          if (r.ok && r.data && r.data.ok) {
+            toast(r.data.added
+              ? '✅ Подписка добавлена: ' + (r.data.title || '')
+              : 'Ты уже подписан на этот аккаунт');
+          } else {
+            toast((r.data && r.data.message) || 'Не удалось подписаться', true);
+          }
         });
 
         // SETTINGS submit
-        $('#settings-submit').addEventListener('click', () => {
+        $('#settings-submit').addEventListener('click', async () => {
           haptic('medium');
           const q = getActiveQuality('#settings-quality');
           if (window.telegramAnalytics) {
             try { window.telegramAnalytics.event('quality_set', { quality: q }); } catch (e) {}
           }
-          sendToBot({ v: 1, type: 'set_quality', quality: q });
+          if (inTg) {
+            sendToBot({ v: 1, type: 'set_quality', quality: q });
+            return;
+          }
+          const r = await api('/api/quality', { method: 'POST', body: JSON.stringify({ quality: q }) });
+          toast(r.ok ? '💾 Качество сохранено' : 'Не удалось сохранить', !r.ok);
         });
+
+        // ─── Init ─────────────────────────────────────────────────────────
+        if (!inTg) {
+          session = loadSession();
+          mountWidget();
+          setMode();
+          // валидируем сохранённую сессию в фоне
+          if (session) {
+            api('/api/me').then(r => {
+              if (!r.ok) { saveSession(null); setMode(); }
+            });
+          }
+        }
 
         // BackButton: close on tap
         if (inTg && tg.BackButton) {
