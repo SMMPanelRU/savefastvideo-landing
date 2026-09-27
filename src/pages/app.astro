@@ -12,9 +12,6 @@ const tgAnalyticsToken = import.meta.env.PUBLIC_TG_ANALYTICS_TOKEN || '';
     <title>SaveFastVideo</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    {tgAnalyticsToken && (
-      <script async src="https://tganalytics.xyz/index.js" type="text/javascript" />
-    )}
     <style>
       :root {
         --bg: #0a0a0a;
@@ -396,17 +393,19 @@ const tgAnalyticsToken = import.meta.env.PUBLIC_TG_ANALYTICS_TOKEN || '';
           window.telegramAnalytics.init({ token: tgAnalyticsToken, appName: 'save_fast_as_video' });
         } catch (e) { console.warn('tga init failed', e); }
       }
-      if (window.telegramAnalytics) {
-        _initTgAnalytics();
-      } else {
-        let tries = 0;
-        const iv = setInterval(() => {
-          if (window.telegramAnalytics || tries++ > 50) {
-            clearInterval(iv);
-            _initTgAnalytics();
-          }
-        }, 100);
+      // SDK аналитики грузим ПОСЛЕ load: tganalytics.xyz бывает висит без тела,
+      // а статичный <script async> держит событие load — Telegram тогда
+      // показывает заглушку загрузки вместо Mini App.
+      function _loadTgAnalytics() {
+        if (!tgAnalyticsToken) return;
+        const s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://tganalytics.xyz/index.js';
+        s.onload = _initTgAnalytics;
+        document.head.appendChild(s);
       }
+      if (document.readyState === 'complete') _loadTgAnalytics();
+      else window.addEventListener('load', _loadTgAnalytics, { once: true });
     </script>
 
     <script is:inline>
