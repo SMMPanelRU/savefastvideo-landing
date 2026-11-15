@@ -136,6 +136,9 @@ const PNAMES: Record<string, string> = { 'Twitter/X': 'X', VK: 'ВКонтакт
       .bar__track { height: 8px; border-radius: 999px; background: var(--bg-elev-2); overflow: hidden; }
       .bar__fill { height: 100%; border-radius: 999px; background: var(--accent); }
 
+      .ch-wrap { position: relative; flex: none; }
+      .ch-ava { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; display: grid; place-items: center; background: var(--hero-grad); color: #fff; font-weight: 800; font-size: 16px; }
+      .ch-warn { position: absolute; right: -3px; bottom: -3px; width: 18px; height: 18px; border-radius: 50%; background: var(--warning); color: #fff; font-size: 12px; font-weight: 900; display: grid; place-items: center; border: 2px solid #fff; }
       /* switch */
       .sw { position: relative; width: 51px; height: 31px; flex: none; border: 0; padding: 0; border-radius: 999px; background: #d6dbe5; transition: background .2s; }
       .sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.18); transition: transform .22s cubic-bezier(.2,.7,.2,1); }
@@ -576,9 +579,14 @@ const PNAMES: Record<string, string> = { 'Twitter/X': 'X', VK: 'ВКонтакт
           const active = ch.filter((c) => c.active).length;
           $('#a-ch-title').textContent = 'Каналы · ' + active + ' из ' + ch.length;
           $('#a-channels').innerHTML = ch.length ? ch.map((c) => {
-            const warn = c.check_failures > 0;
-            return '<div class="cell"><button class="cell" style="padding:0;flex:1;min-width:0" type="button" data-ch="' + c.id + '"><span class="cell__ic">' + (warn ? IC.warn : IC.tg) + '</span><span class="cell__body"><span class="cell__t">' + esc(c.username) + '</span><span class="cell__s">' +
-              (c.active ? (warn ? '<span style="color:var(--warning)">Бот не может проверить подписку</span>' : 'Активен') : 'На паузе') + ' · ' + esc(c.chat_id) + '</span></span></button>' +
+            const broken = c.bot_ok === false;
+            const ava = c.photo ? '<img class="ch-ava" src="' + c.photo + '" alt="">' : '<span class="ch-ava ch-ava--l">' + esc((c.username || '?').trim()[0] || '?').toUpperCase() + '</span>';
+            const members = c.members != null ? n(c.members) + ' ' + plural(c.members, 'подписчик', 'подписчика', 'подписчиков') : '';
+            const why = c.reason === 'not_admin' ? 'Бот не админ канала' : 'Бота нет в канале';
+            const sub = broken
+              ? '<span style="color:var(--warning)">' + why + '</span>'
+              : (c.active ? 'Активен' : 'На паузе') + (members ? ' · ' + members : '');
+            return '<div class="cell"><button class="cell" style="padding:0;flex:1;min-width:0" type="button" data-ch="' + c.id + '"><span class="ch-wrap">' + ava + (broken ? '<span class="ch-warn">!</span>' : '') + '</span><span class="cell__body"><span class="cell__t">' + esc(c.username) + '</span><span class="cell__s">' + sub + '</span></span></button>' +
               '<button class="sw" type="button" role="switch" aria-checked="' + (c.active ? 'true' : 'false') + '" aria-label="Включить канал" data-toggle="' + c.id + '"></button></div>';
           }).join('') : empty(IC.tg, 'Каналов нет', 'Добавьте канал — бот начнёт просить на него подписаться');
         };
@@ -596,9 +604,9 @@ const PNAMES: Record<string, string> = { 'Twitter/X': 'X', VK: 'ВКонтакт
           if (cur === 'history') renderHistory();
           if (cur === 'subs') renderSubs();
         };
-        const loadAdmin = async () => {
+        const loadAdmin = async (fresh) => {
           renderAdmin();
-          const r = await api('/api/admin/overview');
+          const r = await api('/api/admin/overview' + (fresh ? '?fresh=1' : ''));
           if (!r.ok) { toast(r.status === 403 ? 'Нет доступа' : 'Не удалось загрузить', true); return; }
           S.admin = r.data; renderAdmin();
         };
@@ -643,7 +651,7 @@ const PNAMES: Record<string, string> = { 'Twitter/X': 'X', VK: 'ВКонтакт
           if (!t) return;
           if (t.dataset.act === 'paste') return paste();
           if (t.dataset.act === 'quality') { haptic(); return show('more'); }
-          if (t.dataset.act === 'admin-refresh') { haptic(); return loadAdmin(); }
+          if (t.dataset.act === 'admin-refresh') { haptic(); S.admin = null; return loadAdmin(true); }
           if (t.dataset.act === 'ch-add') return openAddChannel();
           if (t.dataset.q && t.closest('#dl-q')) { haptic(); S.dlQ = t.dataset.q; setSeg($('#dl-q'), S.dlQ); return; }
           if (t.dataset.q && t.closest('#set-q')) {
@@ -688,7 +696,7 @@ const PNAMES: Record<string, string> = { 'Twitter/X': 'X', VK: 'ВКонтакт
           if (t.dataset.ch) {
             const c = S.admin.channels.find((x) => x.id === Number(t.dataset.ch)); if (!c) return;
             haptic();
-            sheetOpen('<h3>' + esc(c.username) + '</h3><p class="sub">ID: ' + esc(c.chat_id) + '<br>' + esc(c.url) + (c.check_failures ? '<br><span style="color:var(--warning)">Бот не смог проверить подписку ' + c.check_failures + ' раз — добавьте его админом в канал</span>' : '') + '</p>' +
+            sheetOpen('<h3>' + esc(c.username) + '</h3><p class="sub">ID: ' + esc(c.chat_id) + '<br>' + esc(c.url) + (c.bot_ok === false ? '<br><br><span style="color:var(--warning)">Бот не может проверять подписку. Добавьте @SaveFastVideoFreebot администратором канала и включите канал снова.</span>' : (c.members != null ? '<br>' + Number(c.members).toLocaleString('ru-RU') + ' подписчиков' : '')) + '</p>' +
               '<button class="btn btn--ghost" type="button" id="ch-open">Открыть канал</button><button class="btn btn--danger" type="button" id="ch-del">Удалить канал</button>');
             $('#ch-open').addEventListener('click', () => { try { inTg ? tg.openTelegramLink(c.url) : window.open(c.url, '_blank'); } catch (er) { window.open(c.url, '_blank'); } });
             $('#ch-del').addEventListener('click', () => {
