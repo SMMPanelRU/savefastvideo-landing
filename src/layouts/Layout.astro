@@ -16,6 +16,10 @@ import '../styles/global.css';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" content="#0e0e0e" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
     <title>{title}</title>
     <meta name="description" content={description} />
@@ -49,18 +53,29 @@ import '../styles/global.css';
       description,
     })} />
   </head>
-  <body class="bg-neutral-950 text-neutral-100 antialiased min-h-screen flex flex-col">
-    <header class="border-b border-neutral-800">
-      <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-        <a href="/" class="flex items-center gap-2 font-bold text-lg">
-          <span class="text-orange-500">▶</span> SaveFastVideo
-        </a>
-        <nav class="flex gap-5 text-sm text-neutral-400">
-          <a href="/" class="hover:text-white">Главная</a>
-          <a href="/instagram" class="hover:text-white">Instagram</a>
-          <a href="/tiktok" class="hover:text-white">TikTok</a>
-          <a href="/youtube" class="hover:text-white">YouTube</a>
+  <body class="antialiased min-h-screen flex flex-col">
+    <div class="topbar">
+      <div class="wrap topbar__in">
+        <span>Сервис экосистемы <a href="https://smoservice.media/" rel="noopener">SMOService</a></span>
+        <nav aria-label="Служебное">
+          <a href="/#faq">Помощь</a>
+          <a href="https://smoservice.media/" rel="noopener">SMM-продвижение ↗</a>
         </nav>
+      </div>
+    </div>
+    <header class="hdr">
+      <div class="wrap hdr__in">
+        <a href="/" class="logo" aria-label="SaveFastVideo — главная">
+          <span class="logo__save">SAVE</span><span class="logo__rest">FASTVIDEO</span>
+        </a>
+        <nav class="hdr__nav" aria-label="Основное">
+          <a href="/instagram">Instagram</a>
+          <a href="/tiktok">TikTok</a>
+          <a href="/youtube">YouTube</a>
+          <a href="/#platforms">Все платформы</a>
+          <a href="/#how">Как скачать</a>
+        </nav>
+        <a href="https://t.me/SaveFastVideoFreebot" class="btn btn--outline hdr__cta">Открыть бота</a>
       </div>
     </header>
 
@@ -68,18 +83,70 @@ import '../styles/global.css';
       <slot />
     </main>
 
-    <footer class="border-t border-neutral-800 mt-20">
-      <div class="max-w-5xl mx-auto px-4 py-8 text-sm text-neutral-500 flex flex-col md:flex-row items-center justify-between gap-3">
-        <div>© 2026 SaveFastVideo. Бесплатный сервис для скачивания публичного контента.</div>
-        <div class="flex gap-4">
-          <a href="https://t.me/SaveFastVideoFreebot" class="hover:text-white">Telegram-бот</a>
-          <a href="https://github.com/SMMPanelRU/savefastvideo-landing" class="hover:text-white">GitHub</a>
+    <footer class="ftr">
+      <div class="wrap ftr__grid">
+        <div>
+          <a href="/" class="logo" aria-label="SaveFastVideo"><span class="logo__save">SAVE</span><span class="logo__rest">FASTVIDEO</span></a>
+          <p class="ftr__about">Бесплатный Telegram-бот для скачивания видео из соцсетей. Без рекламы и водяных знаков.</p>
         </div>
+        <div>
+          <h4>Инструкции</h4>
+          <a href="/instagram">Скачать из Instagram</a>
+          <a href="/tiktok">Скачать из TikTok</a>
+          <a href="/youtube">Скачать из YouTube</a>
+          <a href="/#faq">Частые вопросы</a>
+        </div>
+        <div>
+          <h4>Наши боты</h4>
+          <a href="https://t.me/SaveFastVideoFreebot">@SaveFastVideoFreebot</a>
+          <a href="https://t.me/SaveAsVideoFreebot">@SaveAsVideoFreebot</a>
+          <a href="https://t.me/SaveVideoProbot">@SaveVideoProbot</a>
+        </div>
+        <div>
+          <h4>Экосистема</h4>
+          <a href="https://smoservice.media/" rel="noopener">SMOService — SMM-продвижение</a>
+          <a href="https://t.me/BridgePostBot">Bridge — кросспостинг</a>
+          <a href="https://t.me/TonChatAIbot">TonChatAI — AI-чат</a>
+        </div>
+      </div>
+      <div class="wrap ftr__bottom">
+        <span>© 2026 SaveFastVideo · SMOService</span>
+        <span>Скачивание только публичного контента</span>
       </div>
     </footer>
   </body>
 </html>
 <style is:global>
-  html { scroll-behavior: smooth; }
-  body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+  .topbar { background: #0a0a0a; border-bottom: 1px solid #1a1a1a; font-size: 13px; color: var(--text-dim); }
+  .topbar__in { display: flex; justify-content: space-between; align-items: center; height: 38px; gap: 16px; }
+  .topbar a { color: var(--text-muted); transition: color .15s; }
+  .topbar a:hover { color: var(--text); }
+  .topbar nav { display: flex; gap: 20px; }
+  .hdr { position: sticky; top: 0; z-index: 40; background: rgba(14,14,14,.96); backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px); border-bottom: 1px solid var(--line); }
+  .hdr__in { display: flex; align-items: center; gap: 32px; height: 72px; }
+  .logo { font-weight: 800; font-size: 24px; letter-spacing: -.02em; line-height: 1; white-space: nowrap; }
+  .logo__save { color: var(--accent); }
+  .logo__rest { color: #5c5c5c; }
+  .hdr__nav { display: flex; gap: 24px; font-size: 14px; font-weight: 600; flex: 1; }
+  .hdr__nav a { color: var(--text); opacity: .9; transition: color .15s, opacity .15s; }
+  .hdr__nav a:hover { color: var(--accent); opacity: 1; }
+  .ftr { margin-top: 96px; background: #0a0a0a; border-top: 1px solid #1a1a1a; }
+  .ftr__grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 32px; padding-top: 56px; padding-bottom: 40px; }
+  .ftr h4 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-dim); margin-bottom: 14px; }
+  .ftr__grid a:not(.logo) { display: block; font-size: 14px; color: var(--text-muted); padding: 5px 0; transition: color .15s; }
+  .ftr__grid a:not(.logo):hover { color: var(--accent); }
+  .ftr__about { margin-top: 16px; font-size: 14px; line-height: 1.6; color: var(--text-dim); max-width: 300px; }
+  .ftr__bottom { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; background: linear-gradient(#1f1f1f, #1f1f1f) center top / calc(100% - 32px) 1px no-repeat; padding-top: 20px; padding-bottom: 28px; font-size: 13px; color: var(--text-dim); }
+  @media (max-width: 960px) {
+    .hdr__nav { display: none; }
+    .hdr__in { justify-content: space-between; height: 64px; }
+    .ftr__grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) {
+    .topbar__in > span { display: none; }
+    .topbar__in { justify-content: flex-end; }
+    .logo { font-size: 20px; }
+    .hdr__cta { height: 38px; padding: 0 14px; font-size: 13px; }
+    .ftr__grid { grid-template-columns: 1fr; gap: 28px; }
+  }
 </style>

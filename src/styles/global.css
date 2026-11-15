@@ -1,1 +1,69 @@
 @import "tailwindcss";
+
+/* ─── Тема smo (SMOService): графит + оранжевый #FF9800, Inter 800, углы 2–4px ───
+   Снято с smoservice.media 2026-11-15. Контракт токенов — CORE/DESIGN-SYSTEM.md. */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  /* Подкладка Tailwind-палитры под тему: старые страницы (instagram/tiktok/youtube)
+     перекрашиваются без переписывания классов. */
+  --color-neutral-950: #0e0e0e;
+  --color-neutral-900: #121212;
+  --color-neutral-800: #222222;
+  --color-orange-300: #ffb74d;
+  --color-orange-400: #ffa726;
+  --color-orange-500: #ff9800;
+  --radius-lg: 4px;
+  --radius-xl: 4px;
+  --radius-2xl: 4px;
+  --radius-3xl: 4px;
+}
+
+:root {
+  --bg: #0e0e0e;
+  --surface: #121212;
+  --surface-2: #1a1a1a;
+  --text: #ffffff;
+  --text-muted: #a3a3a3;
+  --text-dim: #737373;
+  --line: #222222;
+  --accent: #ff9800;
+  --accent-2: #ffa726;
+  --on-accent: #ffffff;
+  --success: #22c55e;
+  --r-sm: 2px;
+  --r-md: 4px;
+  --container: 1170px;
+}
+
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); }
+::selection { background: var(--accent); color: #000; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.wrap { width: 100%; max-width: var(--container); margin: 0 auto; padding: 0 16px; }
+
+/* ── кнопки ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  height: 48px; padding: 0 22px; border-radius: var(--r-sm);
+  font-size: 14px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase;
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease, transform .1s ease;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(.98); }
+.btn--primary { background: var(--accent); color: var(--on-accent); }
+.btn--primary:hover { background: var(--accent-2); }
+.btn--dark { background: var(--surface-2); color: var(--text); }
+.btn--dark:hover { background: #242424; }
+.btn--outline { border: 1px solid var(--accent); color: var(--accent); background: rgba(255,152,0,.03); text-transform: none; letter-spacing: 0; height: 42px; }
+.btn--outline:hover { background: var(--accent); color: var(--on-accent); }
+
+/* ── заголовок секции с оранжевой чертой (как «Каталог услуг») ── */
+.sec-title { text-align: center; font-size: clamp(24px, 3vw, 30px); font-weight: 800; letter-spacing: -.01em; }
+.sec-title::after { content: ""; display: block; width: 48px; height: 2px; background: var(--accent); margin: 14px auto 0; }
+.sec-lede { text-align: center; color: var(--text-muted); max-width: 620px; margin: 16px auto 0; font-size: 15px; line-height: 1.6; }
+
+.panel { background: var(--surface); border-radius: var(--r-sm); }
+.tile { background: var(--surface); border-radius: var(--r-sm); padding: 24px; }
+.ico { width: 32px; height: 32px; color: var(--text); }
+.hl { color: var(--accent); }

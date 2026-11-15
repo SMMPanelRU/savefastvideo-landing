@@ -1,171 +1,199 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { siInstagram, siTiktok, siYoutube, siX, siVk, siOdnoklassniki, siPinterest, siReddit, siVimeo } from 'simple-icons';
+
+const BOT = 'https://t.me/SaveFastVideoFreebot';
+
+// Бренд-цвет иконки на графите: чёрные марки (TikTok, X) — белым
+const tone = (hex: string) => (hex === '000000' ? '#ffffff' : `#${hex}`);
+
+const platforms = [
+  { icon: siInstagram, name: 'Instagram', what: 'Reels, посты, карусели', href: '/instagram' },
+  { icon: siTiktok, name: 'TikTok', what: 'Видео без водяного знака', href: '/tiktok' },
+  { icon: siYoutube, name: 'YouTube', what: 'Shorts и короткие ролики', href: '/youtube' },
+  { icon: siVk, name: 'ВКонтакте', what: 'Клипы и VK Видео' },
+  { icon: siX, name: 'Twitter / X', what: 'Видео и фото из постов' },
+  { icon: siOdnoklassniki, name: 'Одноклассники', what: 'Видео из ОК' },
+  { icon: siPinterest, name: 'Pinterest', what: 'Видео-пины' },
+  { icon: siReddit, name: 'Reddit', what: 'Видео из постов' },
+  { icon: siVimeo, name: 'Vimeo', what: 'Публичные ролики' },
+];
+
+// Линейные иконки 24×24, stroke — в стиле smoservice.media
+const I = {
+  drop: '<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>',
+  hd: '<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M7 9v6M7 12h3M10 9v6M14 9v6h1.5a2.5 2.5 0 0 0 0-6z"/>',
+  noads: '<circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/>',
+  bell: '<path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
+  album: '<rect x="3" y="7" width="14" height="14" rx="1"/><path d="M7 3h14v14"/>',
+  text: '<path d="M4 6h16M4 12h16M4 18h10"/>',
+  sliders: '<path d="M4 6h10M18 6h2M4 18h4M12 18h8M4 12h4M12 12h8"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="10" cy="18" r="2"/>',
+  free: '<path d="M20 12v9H4v-9"/><rect x="2" y="7" width="20" height="5" rx="1"/><path d="M12 21V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z"/>',
+  chev: '<path d="m9 6 6 6-6 6"/>',
+};
+const svg = (d: string, cls = 'ico') =>
+  `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+
+const perks = [
+  [I.drop, 'Без водяных', 'знаков', 'TikTok и Reels приходят чистыми — без логотипов платформ.'],
+  [I.hd, 'Качество', 'до 1080p', 'Full HD, 720p, 480p или только звук в mp3 — на выбор.'],
+  [I.noads, 'Без рекламы', 'и регистрации', 'Никаких баннеров и паролей — просто отправьте ссылку.'],
+  [I.bell, 'Подписка', 'на каналы', 'Новые видео YouTube и VK приходят в чат автоматически.'],
+];
+
+const features = [
+  [I.drop, 'Скачивание видео', 'Reels, TikTok, Shorts, клипы VK, видео из X — в исходном качестве, без водяных знаков.'],
+  [I.album, 'Карусели целиком', 'Посты из нескольких фото и видео приходят полным альбомом, а не одним файлом.'],
+  [I.text, 'Видео в текст', 'Команда /transcript превращает звуковую дорожку в текст. Русский, английский и 40+ языков.'],
+  [I.bell, 'Подписка на каналы', 'Команда /subscribe — бот сам пришлёт новые видео с YouTube-канала или страницы VK.'],
+  [I.sliders, 'Выбор качества', '1080p, 720p, 480p или mp3. Настраивается один раз и запоминается.'],
+  [I.free, 'Бесплатно навсегда', 'Без подписок и скрытых платежей. Сервис поддерживают партнёрские каналы.'],
+];
+
+const steps = [
+  ['Откройте бота', 'Нажмите «Открыть в Telegram» — бот откроется в приложении на телефоне или компьютере.'],
+  ['Отправьте ссылку', 'Скопируйте ссылку на видео в соцсети и отправьте в чат. Можно сразу несколько.'],
+  ['Получите файл', 'Через несколько секунд бот пришлёт готовое видео — сохраните или перешлите его.'],
+];
+
+const faq = [
+  ['Это правда бесплатно?', 'Да. Бот полностью бесплатный, без скрытых платежей и подписок. Сервис поддерживается партнёрскими каналами — иногда бот предложит подписаться на один из них.'],
+  ['Есть ли водяные знаки на скачанных видео?', 'Нет. Видео из TikTok приходят без логотипа TikTok, Instagram Reels — без водяного знака Instagram.'],
+  ['Какое максимальное качество?', '1080p Full HD — выбирается в меню бота → «Качество». Также есть 720p, 480p и «только звук» (mp3).'],
+  ['Можно ли скачать длинное видео?', 'Telegram принимает от ботов файлы до 50 МБ, поэтому лучше всего скачиваются короткие ролики: Shorts, Reels, клипы, TikTok. Длинные видео в высоком качестве могут не поместиться.'],
+  ['Что такое карусель в Instagram?', 'Пост с несколькими фотографиями или фото вместе с видео. Бот отправляет весь набор альбомом, а не один файл.'],
+  ['Можно ли скачать Stories?', 'Нет. Stories в Instagram и ВКонтакте доступны только после входа в аккаунт — бот работает только с публичным контентом.'],
+  ['Как работает подписка на канал?', 'Отправьте /subscribe и ссылку на YouTube-канал или страницу VK — бот будет присылать новые видео в чат автоматически.'],
+];
 ---
 <Layout
-  title="SaveFastVideo — Скачать видео из Instagram, TikTok, YouTube бесплатно"
-  description="Бесплатный Telegram-бот для скачивания видео из Instagram (Reels, посты, карусели), TikTok без водяных знаков и YouTube Shorts. Также Twitter/X, VK, Одноклассники. Без рекламы, мгновенно."
+  title="SaveFastVideo — Скачать видео из Instagram, TikTok, YouTube, VK бесплатно"
+  description="Бесплатный Telegram-бот для скачивания видео из Instagram (Reels, посты, карусели), TikTok без водяных знаков, YouTube Shorts, клипов VK, Twitter/X и Одноклассников. Без рекламы, до 1080p."
 >
   <!-- Hero -->
-  <section class="max-w-5xl mx-auto px-4 pt-16 pb-20 text-center">
-    <h1 class="text-4xl md:text-6xl font-bold tracking-tight">
-      Скачайте видео из соцсетей
-      <span class="block mt-2 bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
-        в один клик
-      </span>
-    </h1>
-    <p class="mt-6 text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto">
-      Бесплатный Telegram-бот: Instagram Reels, посты, карусели • TikTok без водяных знаков • YouTube Shorts
-    </p>
-    <div class="mt-10 flex flex-col sm:flex-row gap-3 justify-center">
-      <a
-        href="https://t.me/SaveFastVideoFreebot"
-        class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-orange-500 hover:bg-orange-400 text-black font-semibold rounded-xl transition"
-      >
-        🚀 Открыть в Telegram
-      </a>
-      <a
-        href="/app"
-        class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-xl"
-      >
-        🌐 Веб-версия
-      </a>
-      <a
-        href="#how"
-        class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-xl"
-      >
-        Как работает
-      </a>
-    </div>
-    <div class="mt-6 text-sm text-neutral-500">
-      • Без водяных знаков • Без рекламы • Бесплатно
+  <section class="wrap hero-sec">
+    <div class="panel hero">
+      <div class="hero__text">
+        <p class="eyebrow">Telegram-бот · бесплатно</p>
+        <h1 class="hero__title">Скачивание видео<br/>из соцсетей</h1>
+        <p class="hero__sub">Отправьте ссылку — получите видео без водяных знаков.</p>
+        <p class="hero__body">
+          SaveFastVideo скачивает ролики из Instagram, TikTok, YouTube, ВКонтакте, X и ещё десятка сервисов
+          прямо в Telegram. Качество до 1080p, карусели целиком, без рекламы и регистрации.
+        </p>
+        <div class="hero__cta">
+          <a href={BOT} class="btn btn--primary">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21.9 4.6 18.7 19.4c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.2-8.3c.4-.4-.1-.6-.6-.2L6.1 13 1.2 11.5c-1-.3-1.1-1 .2-1.5L20.6 2.6c.9-.3 1.6.2 1.3 2z"/></svg>
+            Открыть в Telegram
+          </a>
+          <a href="#how" class="btn btn--dark">Как это работает</a>
+        </div>
+      </div>
+
+      <!-- Демо: как выглядит ответ бота -->
+      <div class="hero__demo" aria-hidden="true">
+        <div class="phone">
+          <div class="phone__bar">
+            <span class="phone__ava">▶</span>
+            <div><b>SaveFastVideo</b><small>бот</small></div>
+          </div>
+          <div class="chat">
+            <div class="msg msg--out">https://vt.tiktok.com/ZSx8kQ2/</div>
+            <div class="msg msg--in">
+              <div class="vid">
+                <span class="vid__dur">00:16</span>
+                <span class="vid__play"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span>
+                <span class="vid__brand" set:html={`<svg viewBox="0 0 24 24" width="16" height="16"><path fill="#fff" d="${siTiktok.path}"/></svg>`} />
+              </div>
+              <div class="cap">
+                <p><b>Платформа:</b> TikTok</p>
+                <p><b>Качество:</b> 1080p · без водяного знака</p>
+                <p class="cap__by">Скачано с помощью <span>@SaveFastVideoFreebot</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- Features -->
-  <section class="max-w-5xl mx-auto px-4 pb-20">
-    <h2 class="text-3xl font-bold text-center mb-12">Что умеет бот</h2>
-    <div class="grid md:grid-cols-3 gap-5">
-      {[
-        ['📥', 'Скачивание видео', 'Reels, TikTok, YouTube Shorts, Twitter/X, VK — без водяных знаков и в исходном качестве.'],
-        ['🖼', 'Карусели Instagram', 'Multi-photo и mixed (видео + фото) посты приходят полным альбомом, а не одним файлом.'],
-        ['🎙', 'Видео в текст', '/transcript — превратит звуковую дорожку в текст. Поддержка ru/en и 40+ языков. Локальная модель.'],
-        ['🔔', 'Подписка на каналы', '/subscribe — следите за YouTube и VK-каналами. Новые посты приходят автоматически.'],
-        ['🎛', 'Выбор качества', '1080p / 720p / 480p / только звук (mp3) — настраивается раз и запоминается.'],
-        ['🆓', 'Полностью бесплатно', 'Без подписки, без скрытых платежей. Поддерживаем подпиской на партнёрские каналы.'],
-      ].map(([emoji, title, body]) => (
-        <div class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl">
-          <div class="text-3xl mb-3">{emoji}</div>
-          <h3 class="font-semibold text-lg mb-2">{title}</h3>
-          <p class="text-sm text-neutral-400">{body}</p>
+  <!-- Перки (как 4 плитки под героем smoservice.media) -->
+  <section class="wrap perks">
+    {perks.map(([icon, a, b, body]) => (
+      <div class="tile">
+        <Fragment set:html={svg(icon)} />
+        <h3 class="perk__t"><span class="hl">{a}</span> {b}</h3>
+        <p class="perk__b">{body}</p>
+      </div>
+    ))}
+  </section>
+
+  <!-- Платформы -->
+  <section id="platforms" class="wrap block">
+    <div class="panel block__panel">
+      <h2 class="sec-title">Откуда можно скачать</h2>
+      <p class="sec-lede">Публичные видео из популярных соцсетей. Просто пришлите ссылку — бот сам поймёт, откуда она.</p>
+      <div class="plats">
+        {platforms.map((p) => {
+          const Tag = p.href ? 'a' : 'div';
+          return (
+            <Tag href={p.href} class:list={['plat', { 'plat--link': p.href }]}>
+              <span class="plat__ico" set:html={`<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="${tone(p.icon.hex)}" d="${p.icon.path}"/></svg>`} />
+              <span class="plat__txt"><b>{p.name}</b><small>{p.what}</small></span>
+              {p.href && <Fragment set:html={svg(I.chev, 'plat__chev')} />}
+            </Tag>
+          );
+        })}
+      </div>
+      <p class="plats__more">А также Rutube, Дзен, Facebook, Twitch, Dailymotion, SoundCloud и Bilibili.</p>
+    </div>
+  </section>
+
+  <!-- Возможности -->
+  <section class="wrap block">
+    <h2 class="sec-title">Что умеет бот</h2>
+    <div class="feats">
+      {features.map(([icon, t, body]) => (
+        <div class="feat">
+          <span class="feat__ico" set:html={svg(icon)} />
+          <div>
+            <h3>{t}</h3>
+            <p>{body}</p>
+          </div>
         </div>
       ))}
     </div>
   </section>
 
-  <!-- Platforms -->
-  <section class="max-w-5xl mx-auto px-4 pb-20">
-    <h2 class="text-3xl font-bold text-center mb-12">Поддерживаемые платформы</h2>
-    <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-3 text-center">
-      <a href="/instagram" class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl hover:bg-neutral-800 transition">
-        <div class="text-3xl mb-2">🟣</div>
-        <div class="font-semibold">Instagram</div>
-        <div class="text-sm text-neutral-500 mt-1">Reels, посты, карусели</div>
-      </a>
-      <a href="/tiktok" class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl hover:bg-neutral-800 transition">
-        <div class="text-3xl mb-2">⚫</div>
-        <div class="font-semibold">TikTok</div>
-        <div class="text-sm text-neutral-500 mt-1">Без водяных знаков</div>
-      </a>
-      <a href="/youtube" class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl hover:bg-neutral-800 transition">
-        <div class="text-3xl mb-2">🔴</div>
-        <div class="font-semibold">YouTube</div>
-        <div class="text-sm text-neutral-500 mt-1">Shorts и обычные</div>
-      </a>
-      <div class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl">
-        <div class="text-3xl mb-2">✖️</div>
-        <div class="font-semibold">Twitter / X</div>
-        <div class="text-sm text-neutral-500 mt-1">Видео и фото</div>
-      </div>
-      <div class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl">
-        <div class="text-3xl mb-2">🔵</div>
-        <div class="font-semibold">VK</div>
-        <div class="text-sm text-neutral-500 mt-1">Видео и клипы</div>
-      </div>
-      <div class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl">
-        <div class="text-3xl mb-2">🧡</div>
-        <div class="font-semibold">Одноклассники</div>
-        <div class="text-sm text-neutral-500 mt-1">Видео из ОК</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- How -->
-  <section id="how" class="max-w-5xl mx-auto px-4 pb-20">
-    <h2 class="text-3xl font-bold text-center mb-12">Как пользоваться</h2>
-    <ol class="grid md:grid-cols-3 gap-5 list-none p-0">
-      <li class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl">
-        <div class="w-10 h-10 rounded-full bg-orange-500 text-black font-bold flex items-center justify-center mb-3">1</div>
-        <h3 class="font-semibold mb-2">Откройте бот</h3>
-        <p class="text-sm text-neutral-400">Нажмите «Открыть в Telegram» — бот откроется в приложении.</p>
-      </li>
-      <li class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl">
-        <div class="w-10 h-10 rounded-full bg-orange-500 text-black font-bold flex items-center justify-center mb-3">2</div>
-        <h3 class="font-semibold mb-2">Отправьте ссылку</h3>
-        <p class="text-sm text-neutral-400">Скопируйте URL видео и отправьте в чат. Можно с https:// и без.</p>
-      </li>
-      <li class="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl">
-        <div class="w-10 h-10 rounded-full bg-orange-500 text-black font-bold flex items-center justify-center mb-3">3</div>
-        <h3 class="font-semibold mb-2">Получите файл</h3>
-        <p class="text-sm text-neutral-400">Через несколько секунд бот пришлёт готовое видео — без водяных знаков.</p>
-      </li>
+  <!-- Как пользоваться -->
+  <section id="how" class="wrap block">
+    <h2 class="sec-title">Как скачать видео</h2>
+    <ol class="steps">
+      {steps.map(([t, body], i) => (
+        <li class="tile step">
+          <span class="step__n">0{i + 1}</span>
+          <h3>{t}</h3>
+          <p>{body}</p>
+        </li>
+      ))}
     </ol>
   </section>
 
   <!-- FAQ -->
-  <section class="max-w-3xl mx-auto px-4 pb-20">
-    <h2 class="text-3xl font-bold text-center mb-12">Частые вопросы</h2>
-    <div class="space-y-3">
-      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 group">
-        <summary class="font-semibold cursor-pointer">Это правда бесплатно?</summary>
-        <p class="mt-3 text-sm text-neutral-400">Да. Бот полностью бесплатный, без скрытых платежей и подписок. Поддерживается за счёт партнёрских каналов — иногда бот предложит подписаться для продолжения работы.</p>
-      </details>
-      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 group">
-        <summary class="font-semibold cursor-pointer">Есть ли водяные знаки на скачанных видео?</summary>
-        <p class="mt-3 text-sm text-neutral-400">Нет. Видео из TikTok приходят без логотипа TikTok, Instagram Reels — без водяного знака IG.</p>
-      </details>
-      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 group">
-        <summary class="font-semibold cursor-pointer">Какое максимальное качество?</summary>
-        <p class="mt-3 text-sm text-neutral-400">1080p Full HD — настраивается в меню → 🎛 Качество. Также есть 720p, 480p и «только звук» (mp3).</p>
-      </details>
-      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 group">
-        <summary class="font-semibold cursor-pointer">Можно ли скачать длинное YouTube видео?</summary>
-        <p class="mt-3 text-sm text-neutral-400">YouTube Shorts — да, стабильно. Длинные видео иногда упираются в login wall YouTube — лучше Shorts.</p>
-      </details>
-      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 group">
-        <summary class="font-semibold cursor-pointer">Что такое карусель в Instagram?</summary>
-        <p class="mt-3 text-sm text-neutral-400">Карусель — пост с несколькими фотографиями или mixed-пост (видео + фото). Наш бот отправляет весь набор как media-альбом, а не один файл.</p>
-      </details>
-      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 group">
-        <summary class="font-semibold cursor-pointer">Можно ли скачать Instagram Stories?</summary>
-        <p class="mt-3 text-sm text-neutral-400">Нет. Stories требуют доступа к Instagram-аккаунту, что нарушает их правила. Бот работает только с публичным контентом.</p>
-      </details>
-      <details class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 group">
-        <summary class="font-semibold cursor-pointer">Как работает подписка на канал?</summary>
-        <p class="mt-3 text-sm text-neutral-400">Команда <code>/subscribe https://youtube.com/@channel</code> — и бот будет автоматически присылать новые видео этого канала в чат каждые 30 минут. Поддерживается YouTube и VK.</p>
-      </details>
+  <section id="faq" class="wrap block faq-wrap">
+    <h2 class="sec-title">Частые вопросы</h2>
+    <div class="faq">
+      {faq.map(([q, a]) => (
+        <details class="faq__item">
+          <summary>{q}<span class="faq__pm" aria-hidden="true"></span></summary>
+          <p>{a}</p>
+        </details>
+      ))}
     </div>
     <script type="application/ld+json" set:html={JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
-      mainEntity: [
-        ['Это правда бесплатно?', 'Да. Бот полностью бесплатный, без скрытых платежей.'],
-        ['Есть ли водяные знаки?', 'Нет — TikTok и Instagram без watermark.'],
-        ['Максимальное качество?', '1080p Full HD; есть также 720p, 480p и audio-only (mp3).'],
-        ['Длинные YouTube?', 'YouTube Shorts стабильно; длинные часто требуют login.'],
-        ['Что такое карусель?', 'Пост с несколькими фото или mixed video+photo — приходит media-альбомом.'],
-        ['Instagram Stories?', 'Нет — Stories требуют доступа к чужому IG-аккаунту.'],
-        ['Подписка на канал?', '/subscribe — бот шлёт новые видео автоматически.'],
-      ].map(([q, a]) => ({
+      mainEntity: faq.map(([q, a]) => ({
         '@type': 'Question',
         name: q,
         acceptedAnswer: { '@type': 'Answer', text: a },
@@ -174,16 +202,110 @@ import Layout from '../layouts/Layout.astro';
   </section>
 
   <!-- CTA -->
-  <section class="max-w-3xl mx-auto px-4 pb-24 text-center">
-    <div class="bg-gradient-to-br from-orange-500/10 to-pink-500/10 border border-orange-500/30 rounded-3xl p-10">
-      <h2 class="text-3xl font-bold mb-3">Готово — открывайте бот</h2>
-      <p class="text-neutral-400 mb-6">Без регистрации, без рекламы. Просто отправьте ссылку.</p>
-      <a
-        href="https://t.me/SaveFastVideoFreebot"
-        class="inline-flex items-center gap-2 px-8 py-4 bg-orange-500 hover:bg-orange-400 text-black font-semibold rounded-xl transition"
-      >
-        🚀 @SaveFastVideoFreebot
-      </a>
+  <section class="wrap block">
+    <div class="panel cta">
+      <div>
+        <h2>Скачайте первое видео прямо сейчас</h2>
+        <p>Без регистрации и рекламы. Откройте бота и отправьте ссылку.</p>
+      </div>
+      <a href={BOT} class="btn btn--primary cta__btn">Открыть @SaveFastVideoFreebot</a>
     </div>
   </section>
 </Layout>
+
+<style>
+  .hero-sec { padding-top: 40px; }
+  .hero { display: grid; grid-template-columns: 1.05fr .95fr; gap: 40px; align-items: center; padding: 56px 56px 56px 64px; position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; inset: 0; background: radial-gradient(520px 420px at 76% 50%, rgba(255,152,0,.12), rgba(255,152,0,0) 70%); pointer-events: none; }
+  .hero > * { position: relative; }
+  .eyebrow { color: var(--accent); font-size: 15px; font-weight: 500; margin-bottom: 10px; }
+  .hero__title { font-size: clamp(34px, 4.6vw, 52px); line-height: 1.06; font-weight: 800; letter-spacing: -.025em; }
+  .hero__sub { margin-top: 18px; font-size: 18px; font-weight: 500; }
+  .hero__body { margin-top: 18px; font-size: 15px; line-height: 1.65; color: var(--text-muted); max-width: 500px; }
+  .hero__cta { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 12px; }
+
+  .hero__demo { display: flex; justify-content: center; position: relative; }
+  .phone { width: 100%; max-width: 340px; background: #17212b; border: 1px solid #2a2a2a; border-radius: 22px; overflow: hidden; box-shadow: 0 40px 80px -30px rgba(0,0,0,.8), 0 0 0 8px #151515; }
+  .phone__bar { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #1c2733; border-bottom: 1px solid #0e1621; }
+  .phone__bar b { display: block; font-size: 14px; }
+  .phone__bar small { color: #7f91a4; font-size: 12px; }
+  .phone__ava { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #0e0e0e; font-size: 13px; }
+  .chat { padding: 16px 12px 20px; display: flex; flex-direction: column; gap: 10px; background: #0e1621; }
+  .msg { max-width: 86%; border-radius: 14px; font-size: 13px; line-height: 1.45; }
+  .msg--out { align-self: flex-end; background: #2b5278; padding: 8px 12px; color: #d6e7ff; text-decoration: underline; text-underline-offset: 2px; word-break: break-all; }
+  .msg--in { align-self: flex-start; background: #182533; overflow: hidden; width: 86%; }
+  .vid { position: relative; aspect-ratio: 4 / 5; background:
+      radial-gradient(120% 80% at 30% 20%, rgba(255,152,0,.55), transparent 60%),
+      radial-gradient(90% 70% at 80% 90%, rgba(255,64,129,.45), transparent 60%),
+      linear-gradient(160deg, #2a1a0a, #120c16); }
+  .vid__dur { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,.55); border-radius: 8px; padding: 2px 7px; font-size: 11px; }
+  .vid__play { position: absolute; inset: 0; margin: auto; width: 48px; height: 48px; border-radius: 50%; background: rgba(0,0,0,.45); display: grid; place-items: center; color: #fff; }
+  .vid__brand { position: absolute; right: 10px; bottom: 10px; opacity: .9; }
+  .cap { padding: 10px 12px 12px; display: grid; gap: 3px; color: #e6edf3; }
+  .cap b { font-weight: 600; }
+  .cap__by { margin-top: 6px; color: #9fb0c2; }
+  .cap__by span { color: #6ab3f3; }
+
+  .perks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 20px; }
+  .perk__t { margin-top: 18px; font-size: 15px; font-weight: 700; }
+  .perk__b { margin-top: 8px; font-size: 14px; line-height: 1.55; color: var(--text-muted); }
+
+  .block { margin-top: 88px; }
+  .block__panel { padding: 64px 48px; }
+  .plats { margin-top: 44px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .plat { display: flex; align-items: center; gap: 14px; padding: 18px 20px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-sm); transition: border-color .15s, background-color .15s; }
+  .plat--link:hover { border-color: var(--accent); background: #141414; }
+  .plat__ico { width: 44px; height: 44px; flex: none; display: grid; place-items: center; background: var(--surface-2); border-radius: var(--r-sm); }
+  .plat__txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+  .plat__txt b { font-size: 15px; font-weight: 700; }
+  .plat__txt small { font-size: 13px; color: var(--text-muted); }
+  :global(.plat__chev) { width: 18px; height: 18px; color: var(--text-dim); flex: none; }
+  .plat--link:hover :global(.plat__chev) { color: var(--accent); }
+  .plats__more { margin-top: 24px; text-align: center; font-size: 14px; color: var(--text-dim); }
+
+  .feats { margin-top: 44px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; }
+  .feat { display: flex; gap: 16px; padding: 28px; background: var(--surface); }
+  .feat__ico { flex: none; }
+  .feat h3 { font-size: 16px; font-weight: 700; }
+  .feat p { margin-top: 8px; font-size: 14px; line-height: 1.6; color: var(--text-muted); }
+
+  .steps { margin-top: 44px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; list-style: none; padding: 0; }
+  .step { padding: 32px 28px; border-top: 2px solid var(--accent); }
+  .step__n { font-size: 40px; font-weight: 800; color: var(--accent); letter-spacing: -.03em; line-height: 1; }
+  .step h3 { margin-top: 18px; font-size: 17px; font-weight: 700; }
+  .step p { margin-top: 8px; font-size: 14px; line-height: 1.6; color: var(--text-muted); }
+
+  .faq-wrap { max-width: 860px; }
+  .faq { margin-top: 44px; display: grid; gap: 8px; }
+  .faq__item { background: var(--surface); border-radius: var(--r-sm); }
+  .faq__item summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 24px; font-size: 15px; font-weight: 600; }
+  .faq__item summary::-webkit-details-marker { display: none; }
+  .faq__pm { position: relative; width: 14px; height: 14px; flex: none; }
+  .faq__pm::before, .faq__pm::after { content: ""; position: absolute; left: 0; top: 6px; width: 14px; height: 2px; background: var(--text); transition: transform .2s ease, background-color .2s; }
+  .faq__pm::after { transform: rotate(90deg); }
+  .faq__item[open] .faq__pm::before { background: var(--accent); }
+  .faq__item[open] .faq__pm::after { transform: rotate(0); background: var(--accent); }
+  .faq__item p { padding: 0 24px 22px; font-size: 14px; line-height: 1.65; color: var(--text-muted); }
+
+  .cta { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 40px 48px; border-left: 3px solid var(--accent); }
+  .cta h2 { font-size: 24px; font-weight: 800; letter-spacing: -.01em; }
+  .cta__btn { text-transform: none; letter-spacing: 0; font-size: 15px; }
+  .cta p { margin-top: 8px; color: var(--text-muted); font-size: 15px; }
+
+  @media (max-width: 960px) {
+    .hero { grid-template-columns: 1fr; padding: 40px 28px; }
+    .hero__demo { margin-top: 8px; }
+    .perks { grid-template-columns: repeat(2, 1fr); }
+    .plats, .feats, .steps { grid-template-columns: 1fr 1fr; }
+    .block__panel { padding: 48px 24px; }
+    .cta { flex-direction: column; align-items: flex-start; padding: 32px 28px; }
+  }
+  @media (max-width: 600px) {
+    .hero-sec { padding-top: 16px; }
+    .hero { padding: 32px 20px; }
+    .hero__cta .btn { width: 100%; }
+    .perks, .plats, .feats, .steps { grid-template-columns: 1fr; }
+    .block { margin-top: 64px; }
+    .cta .btn { width: 100%; white-space: normal; text-align: center; height: auto; min-height: 48px; padding: 12px 18px; }
+  }
+</style>
