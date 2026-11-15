@@ -1,364 +1,223 @@
 ---
-// Telegram Mini App — functional UI, not just hints.
-// Sends actions to the bot via WebApp.sendData (bot has F.web_app_data handler).
-// Analytics: TG Mini Apps Analytics SDK (PUBLIC_TG_ANALYTICS_TOKEN at build time).
+// SaveFastVideo Mini App v2.
+// Внутри Telegram: вход по initData → /api/*. Вне Telegram: заглушка (+ вход через бота).
+import { siInstagram, siTiktok, siYoutube, siX, siVk, siOdnoklassniki, siPinterest, siReddit, siVimeo, siFacebook, siTwitch, siDailymotion, siSoundcloud, siBilibili } from 'simple-icons';
 const tgAnalyticsToken = import.meta.env.PUBLIC_TG_ANALYTICS_TOKEN || '';
+const ico = (i: { path: string; hex: string }) => ({ p: i.path, c: i.hex === '000000' ? '#111827' : '#' + i.hex });
+const BRANDS = {
+  Instagram: ico(siInstagram), TikTok: ico(siTiktok), YouTube: ico(siYoutube), 'Twitter/X': ico(siX),
+  VK: ico(siVk), OK: ico(siOdnoklassniki), Pinterest: ico(siPinterest), Reddit: ico(siReddit),
+  Vimeo: ico(siVimeo), Facebook: ico(siFacebook), Twitch: ico(siTwitch), Dailymotion: ico(siDailymotion),
+  SoundCloud: ico(siSoundcloud), Bilibili: ico(siBilibili),
+};
+const PLATFORMS = ['Instagram', 'TikTok', 'YouTube', 'VK', 'Twitter/X', 'OK', 'Pinterest', 'Reddit', 'Vimeo'];
+const PNAMES: Record<string, string> = { 'Twitter/X': 'X', VK: 'ВКонтакте', OK: 'Одноклассники' };
 ---
 <!doctype html>
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+    <meta name="theme-color" content="#f2f4f8" />
     <title>SaveFastVideo</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script is:inline src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
+    <style is:global>
       :root {
-        --bg: #0a0a0a;
-        --card: #141414;
-        --card-2: #1c1c1c;
-        --border: #262626;
-        --text: #f5f5f5;
-        --muted: #8a8a8a;
-        --accent: #f97316;
-        --accent-h: #fb923c;
-        --success: #22c55e;
-        --danger: #ef4444;
+        --bg: #f2f4f8; --bg-soft: #ffffff; --bg-elev: #f5f7fb; --bg-elev-2: #eef2f9;
+        --fg: #0f1729; --fg-muted: #6b7489; --fg-faint: #9aa3b5;
+        --border: #e7ecf4; --border-strong: #cfd7e4;
+        --accent: #2563eb; --accent-hover: #1d4fd8; --on-accent: #ffffff; --accent-soft: #eaf1fe;
+        --danger: #ef4444; --danger-soft: #fdecec; --success: #10a64a; --success-soft: #e7f6ec; --warning: #d97706; --warning-soft: #fdf3e2;
+        --hero-grad: linear-gradient(140deg, #5b8cff 0%, #2563eb 52%, #1b46c9 100%);
+        --shadow-1: 0 1px 2px rgba(15, 23, 41, .05); --shadow-2: 0 8px 24px rgba(15, 23, 41, .08);
+        --shadow-accent: 0 10px 24px rgba(37, 99, 235, .28);
+        --r: 18px; --r-sm: 14px;
+        --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
+        color-scheme: light;
       }
       * { box-sizing: border-box; }
-      html, body { margin: 0; padding: 0; }
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-        background: var(--bg);
-        color: var(--text);
-        line-height: 1.5;
-        -webkit-tap-highlight-color: transparent;
-        padding: 0 16px env(safe-area-inset-bottom, 16px);
-      }
-      header {
-        padding: 28px 0 16px;
-        text-align: center;
-      }
-      header .logo {
-        font-size: 32px;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-      }
-      header .logo span { color: var(--accent); }
-      header p {
-        margin: 8px 0 0;
-        color: var(--muted);
-        font-size: 14px;
-      }
-      .tabs {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 4px;
-        background: var(--card);
-        border-radius: 12px;
-        padding: 4px;
-        margin-bottom: 20px;
-      }
-      .tab {
-        padding: 10px 8px;
-        text-align: center;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        border-radius: 10px;
-        color: var(--muted);
-        background: transparent;
-        border: none;
-        font-family: inherit;
-        transition: background .15s, color .15s;
-      }
-      .tab.active {
-        color: var(--text);
-        background: var(--card-2);
-      }
-      .pane { display: none; }
-      .pane.active { display: block; }
-      .field {
-        display: block;
-        margin-bottom: 16px;
-      }
-      .field label {
-        display: block;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        margin-bottom: 8px;
-      }
-      .input, .select {
-        width: 100%;
-        background: var(--card);
-        border: 1px solid var(--border);
-        color: var(--text);
-        font-size: 16px;
-        padding: 14px 16px;
-        border-radius: 12px;
-        font-family: inherit;
-        appearance: none;
-        -webkit-appearance: none;
-      }
-      .input:focus, .select:focus {
-        outline: none;
-        border-color: var(--accent);
-      }
-      .input::placeholder {
-        color: var(--muted);
-      }
-      .btn {
-        width: 100%;
-        background: var(--accent);
-        color: #000;
-        font-weight: 700;
-        font-size: 16px;
-        padding: 16px;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        font-family: inherit;
-        transition: background .15s, transform .1s;
-      }
-      .btn:active { transform: scale(0.98); background: var(--accent-h); }
-      .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-      .quality-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr 1fr;
-        gap: 6px;
-        margin-bottom: 16px;
-      }
-      .quality-row button {
-        padding: 10px 6px;
-        background: var(--card);
-        border: 1px solid var(--border);
-        color: var(--text);
-        font-size: 13px;
-        font-weight: 600;
-        border-radius: 10px;
-        cursor: pointer;
-        font-family: inherit;
-        transition: background .15s, border-color .15s;
-      }
-      .quality-row button.active {
-        background: var(--accent);
-        color: #000;
-        border-color: var(--accent);
-      }
-      .platforms {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 6px;
-        margin-bottom: 20px;
-      }
-      .platform {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 10px 4px;
-        text-align: center;
-        font-size: 11px;
-        color: var(--muted);
-      }
-      .platform .emoji { font-size: 20px; display: block; margin-bottom: 2px; }
-      /* ─── Browser mode: auth + results ─── */
-      .auth-card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 32px 24px;
-        text-align: center;
-        margin-top: 8vh;
-      }
-      .auth-card .icon {
-        width: 64px; height: 64px;
-        border-radius: 16px;
-        background: linear-gradient(135deg, var(--accent), #fbbf24);
-        display: inline-flex; align-items: center; justify-content: center;
-        font-size: 28px; color: #000; font-weight: 800;
-        margin-bottom: 16px;
-      }
-      .auth-card h1 { font-size: 22px; margin: 0 0 8px; letter-spacing: -0.02em; }
-      .auth-card p { color: var(--muted); font-size: 14px; margin: 0 0 24px; }
-      .btn-tg {
-        width: 100%;
-        background: #2aabee;
-        color: #fff;
-        font-weight: 700;
-        font-size: 16px;
-        padding: 15px;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        font-family: inherit;
-        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      }
-      .btn-tg:active { transform: scale(0.98); }
-      .btn-tg:disabled { opacity: 0.6; }
-      #tg-widget { display: flex; justify-content: center; margin-bottom: 12px; min-height: 0; }
-      #tg-widget iframe { border-radius: 12px; }
-      .auth-status { font-size: 13px; color: var(--muted); margin-top: 14px; min-height: 18px; }
-      .userbar {
-        display: flex; align-items: center; justify-content: space-between;
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 10px 14px;
-        margin-bottom: 16px;
-        font-size: 14px;
-      }
-      .userbar .who { font-weight: 600; }
-      .userbar .who span { color: var(--muted); font-weight: 400; }
-      .userbar button {
-        background: none; border: none; color: var(--muted);
-        font-size: 13px; cursor: pointer; font-family: inherit;
-        text-decoration: underline; padding: 0;
-      }
-      .result-item {
-        display: flex; align-items: center; justify-content: space-between; gap: 12px;
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 12px 14px;
-        margin-top: 10px;
-      }
-      .result-item .meta { min-width: 0; }
-      .result-item .name {
-        font-size: 14px; font-weight: 600;
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      }
-      .result-item .size { font-size: 12px; color: var(--muted); }
-      .result-item a {
-        flex-shrink: 0;
-        background: var(--accent); color: #000;
-        font-size: 13px; font-weight: 700;
-        padding: 10px 14px; border-radius: 10px;
-        text-decoration: none;
-      }
-      .spin {
-        display: inline-block; width: 14px; height: 14px;
-        border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
-        border-radius: 50%;
-        animation: spin .7s linear infinite;
-        vertical-align: -2px; margin-right: 6px;
-      }
-      @keyframes spin { to { transform: rotate(360deg); } }
-      .toast {
-        position: fixed;
-        bottom: 32px;
-        left: 16px;
-        right: 16px;
-        background: var(--success);
-        color: #000;
-        padding: 14px 16px;
-        border-radius: 12px;
-        font-size: 14px;
-        font-weight: 600;
-        text-align: center;
-        opacity: 0;
-        transform: translateY(20px);
-        transition: opacity .2s, transform .2s;
-        pointer-events: none;
-        z-index: 100;
-      }
-      .toast.show { opacity: 1; transform: translateY(0); }
-      .toast.danger { background: var(--danger); color: #fff; }
-      footer {
-        margin-top: 28px;
-        text-align: center;
-        color: var(--muted);
-        font-size: 12px;
-        padding-bottom: 32px;
-      }
-      footer a { color: var(--muted); text-decoration: underline; }
+      html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); }
+      body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, 'Segoe UI', Roboto, sans-serif; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+      button, input { font: inherit; color: inherit; }
+      button { cursor: pointer; }
+      svg.i { width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 
-      /* ── Заглушка вне Telegram (тема SMO: графит + #FF9800) ── */
-      body.is-stub { padding: 0; background: #0e0e0e; }
-      body.is-stub > header, body.is-stub > footer, body.is-stub .tabs { display: none !important; }
-      .stub[hidden] { display: none; }
-      .stub {
-        position: relative; min-height: 100vh; min-height: 100dvh; overflow: hidden;
-        display: flex; flex-direction: column; align-items: center;
-        padding: 28px 16px calc(28px + env(safe-area-inset-bottom, 0px));
-        background: #0e0e0e; color: #fff;
-        font-family: Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-      }
-      .stub__glow {
-        position: absolute; inset: auto; top: -30vh; left: 50%; width: 120vw; height: 70vh;
-        transform: translateX(-50%); pointer-events: none;
-        background: radial-gradient(closest-side, rgba(255,152,0,.16), rgba(255,152,0,0));
-      }
-      .stub__brand {
-        position: relative; display: inline-flex; align-items: center; gap: 10px;
-        color: #8c8c8c; text-decoration: none; font-weight: 800; letter-spacing: .04em; font-size: 15px;
-      }
-      .stub__brand b { color: #ff9800; font-weight: 800; }
-      .stub__mark {
-        width: 26px; height: 26px; display: grid; place-items: center;
-        background: #ff9800; color: #0e0e0e; border-radius: 2px;
-      }
-      .stub__body {
-        position: relative; flex: 1; width: 100%; max-width: 600px;
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        text-align: center; padding: 48px 0;
-      }
-      .stub__icon {
-        width: 88px; height: 88px; display: grid; place-items: center; margin-bottom: 28px;
-        color: #ff9800; background: #121212; border: 1px solid #262626; border-radius: 4px;
-      }
-      .stub__eyebrow { margin: 0 0 12px; color: #ff9800; font-size: 14px; font-weight: 500; }
-      .stub__title {
-        margin: 0 0 16px; font-size: clamp(28px, 6vw, 40px); line-height: 1.12;
-        font-weight: 800; letter-spacing: -.02em;
-      }
-      .stub__lede { margin: 0 0 32px; color: #a3a3a3; font-size: 16px; line-height: 1.55; max-width: 440px; }
-      .stub__cta {
-        display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-        width: 100%; max-width: 360px; height: 56px; padding: 0 24px;
-        background: #ff9800; color: #fff; text-decoration: none; border-radius: 2px;
-        font-size: 15px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase;
-        transition: background .15s ease, transform .1s ease;
-      }
-      .stub__cta:hover { background: #ffa726; }
+      .app { max-width: 520px; margin: 0 auto; padding: calc(14px + var(--safe-top)) 16px calc(112px + var(--safe-bottom)); min-height: 100vh; }
+      .app[hidden], [hidden] { display: none !important; }
+      .screen { animation: in .22s ease; }
+      @keyframes in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+      /* hero */
+      .hero { position: relative; border-radius: 22px; padding: 18px 18px 16px; overflow: hidden; margin-bottom: 16px; background: var(--hero-grad); color: #fff; box-shadow: var(--shadow-accent); }
+      .hero::before { content: ''; position: absolute; width: 220px; height: 220px; border-radius: 50%; right: -60px; top: -90px; background: radial-gradient(circle, rgba(255,255,255,.4), transparent 70%); opacity: .55; }
+      .hero::after { content: ''; position: absolute; inset: 0; background: radial-gradient(120% 80% at 0% 100%, rgba(0,0,0,.16), transparent 60%); }
+      .hero > * { position: relative; z-index: 1; }
+      .hero__top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+      .hero__ava { width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,.25); display: grid; place-items: center; font-weight: 800; }
+      .hero__name { flex: 1; min-width: 0; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .hero__badge { font-size: 12px; font-weight: 800; background: rgba(255,255,255,.28); padding: 4px 11px; border-radius: 999px; border: 0; color: #fff; }
+      .hero__lbl { font-size: 13px; font-weight: 700; opacity: .82; }
+      .hero__big { font-size: 40px; font-weight: 900; letter-spacing: -.03em; line-height: 1.05; margin-top: 2px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+      .hero__pill { font-size: 13px; font-weight: 800; background: rgba(255,255,255,.22); padding: 4px 10px; border-radius: 999px; }
+      .hq { display: flex; gap: 8px; margin-top: 16px; }
+      .hq button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: #fff; background: none; border: 0; padding: 0; transition: transform .08s ease; }
+      .hq button:active { transform: scale(.94); }
+      .hq__c { width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.22); border: 1px solid rgba(255,255,255,.35); display: grid; place-items: center; }
+
+      /* headers & sections */
+      .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 6px 4px 4px; }
+      .head h1 { margin: 0; font-size: 26px; line-height: 1.1; font-weight: 800; letter-spacing: -.02em; }
+      .head__sub { margin: 4px 4px 16px; color: var(--fg-muted); font-size: 13.5px; }
+      .stitle { display: flex; align-items: center; justify-content: space-between; margin: 22px 4px 10px; font-size: 17px; font-weight: 800; letter-spacing: -.015em; }
+      .stitle a, .stitle button { font-size: 13px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border: 0; border-radius: 999px; padding: 6px 12px; text-decoration: none; }
+      .card { background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--shadow-1); overflow: hidden; }
+      .card--pad { padding: 16px; }
+
+      /* download form */
+      .field { display: flex; align-items: center; gap: 8px; background: var(--bg-elev); border: 1.5px solid var(--border); border-radius: var(--r-sm); padding: 4px 4px 4px 14px; transition: border-color .15s, background .15s; }
+      .field:focus-within { border-color: var(--accent); background: #fff; }
+      .field input { flex: 1; min-width: 0; border: 0; background: none; outline: 0; font-size: 15.5px; padding: 11px 0; }
+      .field input::placeholder { color: var(--fg-faint); }
+      .field__btn { height: 40px; padding: 0 12px; border-radius: 11px; border: 0; background: var(--accent-soft); color: var(--accent); font-size: 13.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+      .field__btn svg.i { width: 18px; height: 18px; }
+      .lbl { margin: 14px 2px 8px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--fg-muted); }
+      .seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: var(--bg-elev-2); border-radius: 12px; padding: 4px; }
+      .seg button { height: 38px; border: 0; border-radius: 9px; background: none; font-size: 14px; font-weight: 700; color: var(--fg-muted); transition: background .15s, color .15s, box-shadow .15s; }
+      .seg button[aria-pressed="true"] { background: #fff; color: var(--fg); box-shadow: var(--shadow-1); }
+      .btn { width: 100%; height: 52px; margin-top: 14px; border: 0; border-radius: var(--r-sm); background: var(--accent); color: var(--on-accent); font-size: 16px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: var(--shadow-accent); transition: transform .08s ease, background .15s, opacity .15s; }
+      .btn:active { transform: scale(.98); }
+      .btn:disabled { opacity: .6; box-shadow: none; }
+      .btn--ghost { background: var(--accent-soft); color: var(--accent); box-shadow: none; }
+      .btn--danger { background: var(--danger-soft); color: var(--danger); box-shadow: none; }
+      .hint { margin: 10px 2px 0; font-size: 13px; color: var(--fg-muted); text-align: center; }
+
+      /* cells */
+      .cell { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 14px; background: transparent; border: 0; text-align: left; position: relative; text-decoration: none; color: var(--fg); }
+      .cell + .cell::before { content: ''; position: absolute; top: 0; left: 62px; right: 0; height: 1px; background: var(--border); }
+      button.cell:active, a.cell:active { background: var(--accent-soft); }
+      .cell__ic { width: 38px; height: 38px; border-radius: 11px; background: var(--bg-elev-2); display: grid; place-items: center; flex: none; color: var(--accent); }
+      .cell__ic svg { width: 20px; height: 20px; }
+      .cell__ic--brand svg { width: 19px; height: 19px; }
+      .cell__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+      .cell__t { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .cell__s { font-size: 12.5px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .cell__end { flex: none; color: var(--fg-faint); display: flex; align-items: center; gap: 8px; }
+      .cell__end svg.i { width: 18px; height: 18px; }
+      .pill { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+      .pill--ok { background: var(--success-soft); color: var(--success); }
+      .pill--fail { background: var(--danger-soft); color: var(--danger); }
+      .pill--warn { background: var(--warning-soft); color: var(--warning); }
+      .pill--mute { background: var(--bg-elev-2); color: var(--fg-muted); }
+      .day { margin: 18px 6px 8px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--fg-muted); }
+
+      /* chips */
+      .chips { display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px 4px; padding: 2px 16px 6px; scrollbar-width: none; }
+      .chips::-webkit-scrollbar { display: none; }
+      .chip { flex: none; height: 36px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--border); background: #fff; font-size: 14px; font-weight: 700; color: var(--fg); box-shadow: var(--shadow-1); }
+      .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: var(--shadow-accent); }
+      .chip b { margin-left: 4px; opacity: .7; }
+
+      /* platforms */
+      .plats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .plat { background: #fff; border: 1px solid var(--border); border-radius: var(--r-sm); padding: 14px 6px 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; box-shadow: var(--shadow-1); }
+      .plat__ic { width: 40px; height: 40px; border-radius: 12px; background: var(--bg-elev); display: grid; place-items: center; }
+      .plat__ic svg { width: 21px; height: 21px; }
+
+      /* stats */
+      .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .tile { background: #fff; border: 1px solid var(--border); border-radius: var(--r-sm); padding: 14px 12px; box-shadow: var(--shadow-1); }
+      .tile__v { font-size: 24px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
+      .tile__l { margin-top: 4px; font-size: 12px; color: var(--fg-muted); font-weight: 600; line-height: 1.25; }
+      .tile--ok .tile__v { color: var(--success); } .tile--fail .tile__v { color: var(--danger); }
+      .bars { padding: 6px 14px 14px; }
+      .bar { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 10px; margin-top: 10px; font-size: 13.5px; font-weight: 600; }
+      .bar__ic svg { width: 18px; height: 18px; }
+      .bar__track { height: 8px; border-radius: 999px; background: var(--bg-elev-2); overflow: hidden; }
+      .bar__fill { height: 100%; border-radius: 999px; background: var(--accent); }
+
+      /* switch */
+      .sw { position: relative; width: 51px; height: 31px; flex: none; border: 0; padding: 0; border-radius: 999px; background: #d6dbe5; transition: background .2s; }
+      .sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.18); transition: transform .22s cubic-bezier(.2,.7,.2,1); }
+      .sw[aria-checked="true"] { background: var(--accent); }
+      .sw[aria-checked="true"]::after { transform: translateX(20px); }
+
+      /* empty */
+      .empty { padding: 34px 20px; text-align: center; color: var(--fg-muted); font-size: 14px; }
+      .empty__ic { width: 56px; height: 56px; margin: 0 auto 12px; border-radius: 16px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+      .empty b { display: block; color: var(--fg); font-size: 16px; margin-bottom: 4px; }
+
+      /* skeleton */
+      .sk { border-radius: 10px; background: linear-gradient(90deg, #e9edf4 25%, #f3f5f9 50%, #e9edf4 75%); background-size: 200% 100%; animation: sk 1.2s infinite; }
+      @keyframes sk { to { background-position: -200% 0; } }
+
+      /* bottom nav (стандарт экосистемы) */
+      .nav-fade { position: fixed; left: 0; right: 0; bottom: 0; height: calc(120px + var(--safe-bottom)); pointer-events: none; z-index: 40; background: linear-gradient(to bottom, rgba(242,244,248,0), var(--bg) 70%); }
+      .nav { position: fixed; left: 16px; right: 16px; bottom: max(var(--safe-bottom), 12px); max-width: 488px; margin: 0 auto; z-index: 50; display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,.96); backdrop-filter: saturate(180%) blur(16px); -webkit-backdrop-filter: saturate(180%) blur(16px); border: 1px solid var(--border); border-radius: 999px; padding: 6px; box-shadow: 0 10px 30px rgba(15,23,41,.12); }
+      .nav button { flex: 1 1 0; min-width: 44px; min-height: 46px; display: flex; align-items: center; justify-content: center; gap: 7px; color: var(--fg-muted); font-size: 13.5px; font-weight: 700; padding: 0 10px; border: 0; background: none; border-radius: 999px; transition: color .2s, background .2s, flex-grow .25s cubic-bezier(.2,.6,.2,1); }
+      .nav button:active { transform: scale(.94); }
+      .nav span { display: none; white-space: nowrap; }
+      .nav button[aria-current="page"] { flex-grow: 2.2; color: #fff; background: var(--accent); box-shadow: var(--shadow-accent); }
+      .nav button[aria-current="page"] span { display: inline; }
+      @media (prefers-reduced-motion: reduce) { .nav button, .screen { transition: none; animation: none; } }
+
+      /* sheet */
+      .sheet-bg { position: fixed; inset: 0; z-index: 80; background: rgba(15,23,41,.38); opacity: 0; transition: opacity .2s; }
+      .sheet-bg.on { opacity: 1; }
+      .sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; max-width: 520px; margin: 0 auto; background: var(--bg); border-radius: 22px 22px 0 0; padding: 10px 16px calc(20px + var(--safe-bottom)); transform: translateY(100%); transition: transform .26s cubic-bezier(.2,.7,.2,1); max-height: 88vh; overflow: auto; }
+      .sheet.on { transform: none; }
+      .sheet__grab { width: 38px; height: 5px; border-radius: 999px; background: var(--border-strong); margin: 0 auto 14px; }
+      .sheet h3 { margin: 0 4px 4px; font-size: 20px; font-weight: 800; }
+      .sheet p.sub { margin: 0 4px 14px; font-size: 13.5px; color: var(--fg-muted); line-height: 1.45; }
+      .sheet .field + .lbl { margin-top: 14px; }
+      .sheet .field { background: #fff; }
+
+      /* toast */
+      .toast { position: fixed; left: 50%; top: calc(14px + var(--safe-top)); z-index: 100; transform: translate(-50%, calc(-100% - 40px)); visibility: hidden; max-width: calc(100% - 32px); padding: 12px 16px; border-radius: 14px; background: #0f1729; color: #fff; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-2); transition: transform .28s cubic-bezier(.2,.7,.2,1); }
+      .toast.on { transform: translate(-50%, 0); visibility: visible; }
+      .toast--err { background: var(--danger); }
+
+      .spin { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff; animation: rot .7s linear infinite; }
+      @keyframes rot { to { transform: rotate(360deg); } }
+      .foot { margin: 26px 0 0; text-align: center; font-size: 12px; color: var(--fg-faint); }
+
+      /* ── Заглушка вне Telegram (светлая тема, как приложение) ── */
+      body.is-stub { background: var(--bg); }
+      .stub { position: relative; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; padding: 28px 16px calc(28px + var(--safe-bottom)); }
+      .stub__glow { display: none; }
+      .stub__brand { display: inline-flex; align-items: center; gap: 10px; color: var(--fg); text-decoration: none; font-weight: 800; font-size: 17px; letter-spacing: -.01em; }
+      .stub__brand b { font-weight: 800; }
+      .stub__mark { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; background: var(--hero-grad); color: #fff; }
+      .stub__body { flex: 1; width: 100%; max-width: 440px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 0; }
+      .stub__icon { width: 84px; height: 84px; display: grid; place-items: center; margin-bottom: 24px; border-radius: 24px; background: var(--hero-grad); color: #fff; box-shadow: var(--shadow-accent); }
+      .stub__eyebrow { margin: 0 0 8px; color: var(--accent); font-size: 14px; font-weight: 700; }
+      .stub__title { margin: 0 0 12px; font-size: clamp(28px, 7vw, 36px); line-height: 1.1; font-weight: 800; letter-spacing: -.025em; }
+      .stub__lede { margin: 0 0 28px; color: var(--fg-muted); font-size: 16px; line-height: 1.5; }
+      .stub__cta { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; height: 54px; border-radius: var(--r-sm); background: var(--accent); color: #fff; text-decoration: none; font-size: 16px; font-weight: 700; box-shadow: var(--shadow-accent); transition: transform .08s ease; }
       .stub__cta:active { transform: scale(.98); }
-      .stub__cta:focus-visible, .stub__web:focus-visible, .stub__alt a:focus-visible { outline: 2px solid #ff9800; outline-offset: 3px; }
-      .stub__alt { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; color: #525252; font-size: 14px; }
-      .stub__alt a { color: #a3a3a3; text-decoration: none; }
-      .stub__alt a:hover { color: #fff; }
-      .stub__web {
-        margin-top: 28px; background: none; border: 0; padding: 8px; cursor: pointer;
-        color: #737373; font: inherit; font-size: 13px; text-decoration: underline; text-underline-offset: 3px;
-      }
-      .stub__web:hover { color: #d4d4d4; }
-      .stub__web:disabled { opacity: .7; cursor: default; text-decoration: none; }
-      .stub .auth-status { max-width: 360px; }
-      .stub__back { position: relative; color: #737373; font-size: 13px; text-decoration: none; }
-      .stub__back:hover { color: #fff; }
+      .stub__alt { margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; color: var(--fg-faint); font-size: 14px; }
+      .stub__alt a { color: var(--accent); text-decoration: none; font-weight: 600; }
+      .stub__web { margin-top: 24px; background: none; border: 0; padding: 8px; color: var(--fg-muted); font-size: 13.5px; text-decoration: underline; text-underline-offset: 3px; }
+      .stub__web:disabled { opacity: .7; text-decoration: none; }
+      .stub .auth-status { margin-top: 10px; font-size: 13px; color: var(--fg-muted); line-height: 1.5; min-height: 18px; }
+      .stub__back { color: var(--fg-muted); font-size: 13.5px; text-decoration: none; }
     </style>
   </head>
   <body>
-    <header>
-      <div class="logo"><span>▶</span> SaveFastVideo</div>
-      <p>Скачивание видео из соцсетей</p>
-    </header>
-
     <!-- ЗАГЛУШКА ВНЕ TELEGRAM: Mini App живёт только внутри Telegram -->
     <section id="auth" class="stub" hidden>
       <div class="stub__glow" aria-hidden="true"></div>
       <a class="stub__brand" href="/" aria-label="SaveFastVideo — на главную">
         <span class="stub__mark"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg></span>
-        <span>SAVE<b>FAST</b>VIDEO</span>
+        <span>SaveFastVideo</span>
       </a>
       <div class="stub__body">
         <div class="stub__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
         </div>
-        <p class="stub__eyebrow">SaveFastVideo</p>
+        <p class="stub__eyebrow">Telegram Mini App</p>
         <h1 class="stub__title">Приложение работает<br/>в Telegram</h1>
-        <p class="stub__lede">Скачивание видео из TikTok, Instagram, YouTube, VK и X работает в нашем боте — быстро, без рекламы и водяных знаков.</p>
+        <p class="stub__lede">Скачивайте видео из TikTok, Instagram, YouTube, VK и X — в исходном качестве и без водяных знаков.</p>
         <a class="stub__cta" href="https://t.me/SaveFastVideoFreebot?startapp">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M21.9 4.6 18.7 19.4c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.2-8.3c.4-.4-.1-.6-.6-.2L6.1 13 1.2 11.5c-1-.3-1.1-1 .2-1.5L20.6 2.6c.9-.3 1.6.2 1.3 2z"/></svg>
           Открыть в Telegram
@@ -368,467 +227,557 @@ const tgAnalyticsToken = import.meta.env.PUBLIC_TG_ANALYTICS_TOKEN || '';
           <span aria-hidden="true">·</span>
           <a href="https://t.me/SaveVideoProbot">@SaveVideoProbot</a>
         </div>
-        <button class="stub__web" id="bot-login" type="button">Войти в веб-версию</button>
+        <button class="stub__web" id="bot-login" type="button">Открыть в браузере</button>
         <div class="auth-status" id="auth-status"></div>
       </div>
-      <a class="stub__back" href="/">← На сайт save.smoservice.media</a>
+      <a class="stub__back" href="/">← На сайт</a>
     </section>
 
-    <div class="userbar" id="userbar" hidden>
-      <div class="who" id="userbar-name"></div>
-      <button type="button" id="logout">Выйти</button>
-    </div>
-
-    <div class="tabs" role="tablist">
-      <button class="tab active" data-tab="download" type="button">📥 Скачать</button>
-      <button class="tab" data-tab="subscribe" type="button">🔔 Подписки</button>
-      <button class="tab" data-tab="settings" type="button">🎛 Качество</button>
-    </div>
-
-    <!-- DOWNLOAD -->
-    <section class="pane active" data-pane="download">
-      <div class="field">
-        <label for="dl-url">Ссылка на видео</label>
-        <input id="dl-url" class="input" type="url" placeholder="https://tiktok.com/@user/video/123..." inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" />
-      </div>
-      <div class="field">
-        <label>Качество</label>
-        <div class="quality-row" id="dl-quality">
-          <button type="button" data-q="1080">1080p</button>
-          <button type="button" data-q="720" class="active">720p</button>
-          <button type="button" data-q="480">480p</button>
-          <button type="button" data-q="audio">🎵 MP3</button>
+    <main class="app" id="app" hidden>
+      <!-- ГЛАВНАЯ -->
+      <section class="screen" data-screen="home">
+        <div class="hero">
+          <div class="hero__top">
+            <div class="hero__ava" id="h-ava">S</div>
+            <div class="hero__name" id="h-name">SaveFastVideo</div>
+            <button class="hero__badge" id="h-q" type="button" aria-label="Качество по умолчанию">720p</button>
+          </div>
+          <div class="hero__lbl">Скачано видео</div>
+          <div class="hero__big"><span id="h-count">—</span><span class="hero__pill" id="h-subs" hidden></span></div>
+          <div class="hq">
+            <button type="button" data-act="paste"><span class="hq__c"><svg class="i" viewBox="0 0 24 24"><path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1z"/><path d="M8 6H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/></svg></span>Вставить</button>
+            <button type="button" data-go="history"><span class="hq__c"><svg class="i" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg></span>История</button>
+            <button type="button" data-go="subs"><span class="hq__c"><svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg></span>Подписки</button>
+          </div>
         </div>
-      </div>
-      <button class="btn" id="dl-submit" type="button">Скачать в чат</button>
-      <p style="color:var(--muted); font-size:13px; margin-top:14px; text-align:center;" id="dl-hint">
-        Результат придёт сообщением в чат с ботом.
-      </p>
-      <div id="dl-results"></div>
 
-      <h2 style="font-size:14px; color:var(--muted); margin:24px 0 10px; text-transform:uppercase; letter-spacing:0.04em; font-weight:500;">Поддерживаемые платформы</h2>
-      <div class="platforms">
-        <div class="platform"><span class="emoji">🟣</span>Instagram</div>
-        <div class="platform"><span class="emoji">⚫</span>TikTok</div>
-        <div class="platform"><span class="emoji">🔴</span>YouTube</div>
-        <div class="platform"><span class="emoji">✖️</span>X / Twitter</div>
-        <div class="platform"><span class="emoji">🔵</span>VK</div>
-        <div class="platform"><span class="emoji">🧡</span>OK</div>
-      </div>
-    </section>
-
-    <!-- SUBSCRIBE -->
-    <section class="pane" data-pane="subscribe">
-      <div class="field">
-        <label for="sub-url">Канал YouTube или VK</label>
-        <input id="sub-url" class="input" type="url" placeholder="https://youtube.com/@channel  или  https://vk.com/group" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" />
-      </div>
-      <button class="btn" id="sub-submit" type="button">🔔 Подписаться</button>
-      <p style="color:var(--muted); font-size:13px; margin-top:14px; text-align:center;">
-        Бот будет автоматически присылать новые посты каждые 30 минут.
-      </p>
-      <div style="background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-top:20px; font-size:14px; color:var(--muted);">
-        <strong style="color:var(--text);">Управление подписками</strong><br/>
-        Список ваших подписок и удаление — в чате с ботом:<br/>
-        <code style="background:var(--card-2); padding:2px 6px; border-radius:4px; color:var(--text);">/subscriptions</code> — список<br/>
-        <code style="background:var(--card-2); padding:2px 6px; border-radius:4px; color:var(--text);">/unsubscribe N</code> — отписаться по номеру
-      </div>
-    </section>
-
-    <!-- SETTINGS -->
-    <section class="pane" data-pane="settings">
-      <div class="field">
-        <label>Качество по умолчанию</label>
-        <div class="quality-row" id="settings-quality">
-          <button type="button" data-q="1080">1080p</button>
-          <button type="button" data-q="720" class="active">720p</button>
-          <button type="button" data-q="480">480p</button>
-          <button type="button" data-q="audio">🎵 MP3</button>
+        <div class="card card--pad">
+          <div class="field">
+            <input id="dl-url" type="url" inputmode="url" placeholder="Вставьте ссылку на видео" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+            <button class="field__btn" type="button" data-act="paste"><svg class="i" viewBox="0 0 24 24"><path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1z"/><path d="M8 6H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/></svg>Вставить</button>
+          </div>
+          <div class="lbl">Качество</div>
+          <div class="seg" id="dl-q" role="group" aria-label="Качество">
+            <button type="button" data-q="1080">1080p</button><button type="button" data-q="720">720p</button><button type="button" data-q="480">480p</button><button type="button" data-q="audio">MP3</button>
+          </div>
+          <button class="btn" id="dl-go" type="button">
+            <svg class="i" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            Скачать в чат
+          </button>
+          <p class="hint">Видео придёт сообщением в чат с ботом</p>
         </div>
-        <p style="color:var(--muted); font-size:13px; margin:8px 0 0;">
-          Сохранится для всех будущих скачиваний — как в чате через меню → 🎛 Качество.
-        </p>
-      </div>
-      <button class="btn" id="settings-submit" type="button">💾 Сохранить качество</button>
 
-      <div style="background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-top:24px; font-size:14px; color:var(--muted); line-height:1.6;">
-        <strong style="color:var(--text); display:block; margin-bottom:6px;">🎙 Видео в текст</strong>
-        Пришли голосовое сообщение, аудиофайл или видео-кружок прямо в чат с ботом — он распознает речь (faster-whisper локально, поддержка ru/en/40+ языков) и пришлёт текст.
-      </div>
-    </section>
+        <div class="stitle">Недавние <button type="button" data-go="history">Все</button></div>
+        <div class="card" id="recent"></div>
 
-    <div id="toast" class="toast"></div>
+        <div class="stitle">Откуда можно скачать</div>
+        <div class="plats">
+          {PLATFORMS.map((p) => (
+            <div class="plat">
+              <span class="plat__ic" set:html={`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${BRANDS[p].c}" d="${BRANDS[p].p}"/></svg>`} />
+              {PNAMES[p] || p}
+            </div>
+          ))}
+        </div>
+        <p class="foot">Также Rutube, Дзен, Facebook, Twitch, Dailymotion, SoundCloud</p>
+      </section>
 
-    <footer>
-      <a href="https://t.me/SaveFastVideoFreebot">@SaveFastVideoFreebot</a>
-      ·
-      <a href="/">Сайт</a>
-    </footer>
+      <!-- ИСТОРИЯ -->
+      <section class="screen" data-screen="history" hidden>
+        <div class="head"><h1>История</h1></div>
+        <p class="head__sub">Всё, что вы скачивали через бота и приложение</p>
+        <div class="chips" id="h-filter" role="group" aria-label="Фильтр">
+          <button class="chip" type="button" data-f="all" aria-pressed="true">Все</button>
+          <button class="chip" type="button" data-f="ok">Скачано</button>
+          <button class="chip" type="button" data-f="fail">Ошибки</button>
+        </div>
+        <div id="history"></div>
+      </section>
+
+      <!-- ПОДПИСКИ -->
+      <section class="screen" data-screen="subs" hidden>
+        <div class="head"><h1>Подписки</h1></div>
+        <p class="head__sub">Новые видео с этих каналов бот пришлёт сам</p>
+        <div class="card card--pad">
+          <div class="field">
+            <input id="sub-url" type="url" inputmode="url" placeholder="Ссылка на YouTube-канал или VK" autocomplete="off" autocapitalize="off" spellcheck="false" />
+          </div>
+          <button class="btn" id="sub-go" type="button">Подписаться</button>
+        </div>
+        <div class="stitle" id="subs-title">Мои подписки</div>
+        <div id="subs"></div>
+      </section>
+
+      <!-- ЕЩЁ -->
+      <section class="screen" data-screen="more" hidden>
+        <div class="head"><h1>Ещё</h1></div>
+        <p class="head__sub" id="more-sub">Настройки и помощь</p>
+        <div class="lbl">Качество по умолчанию</div>
+        <div class="card card--pad">
+          <div class="seg" id="set-q" role="group" aria-label="Качество по умолчанию">
+            <button type="button" data-q="1080">1080p</button><button type="button" data-q="720">720p</button><button type="button" data-q="480">480p</button><button type="button" data-q="audio">MP3</button>
+          </div>
+          <p class="hint">Так бот будет качать ссылки, присланные в чат</p>
+        </div>
+        <div id="admin-entry" hidden>
+          <div class="lbl">Управление</div>
+          <div class="card">
+            <button class="cell" type="button" data-go="admin">
+              <span class="cell__ic"><svg class="i" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span>
+              <span class="cell__body"><span class="cell__t">Админка</span><span class="cell__s">Каналы для подписки и статистика</span></span>
+              <span class="cell__end"><svg class="i" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span>
+            </button>
+          </div>
+        </div>
+        <div class="lbl">Как пользоваться</div>
+        <div class="card">
+          <div class="cell"><span class="cell__ic"><svg class="i" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></span><span class="cell__body"><span class="cell__t">Пришлите ссылку в чат</span><span class="cell__s">Можно несколько сразу — встанут в очередь</span></span></div>
+          <div class="cell"><span class="cell__ic"><svg class="i" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span><span class="cell__body"><span class="cell__t">Голосовое → текст</span><span class="cell__s">Перешлите голосовое — бот расшифрует</span></span></div>
+          <div class="cell"><span class="cell__ic"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><span class="cell__body"><span class="cell__t">Текст из видео</span><span class="cell__s">Команда /transcript и ссылка</span></span></div>
+        </div>
+        <p class="foot">SaveFastVideo · без водяных знаков</p>
+      </section>
+
+      <!-- АДМИНКА -->
+      <section class="screen" data-screen="admin" hidden>
+        <div class="head"><h1>Админка</h1><button class="stitle-btn chip" type="button" data-act="admin-refresh" aria-label="Обновить">Обновить</button></div>
+        <p class="head__sub">Видно только администраторам</p>
+        <div class="tiles" id="a-tiles"></div>
+        <div class="stitle">Скачивания за 7 дней</div>
+        <div class="card bars" id="a-plats"></div>
+        <div class="stitle"><span id="a-ch-title">Каналы для подписки</span><button type="button" data-act="ch-add">+ Добавить</button></div>
+        <p class="head__sub" style="margin-top:-4px">Раз в несколько скачиваний бот просит подписаться на один случайный активный канал</p>
+        <div class="card" id="a-channels"></div>
+      </section>
+    </main>
+
+    <nav class="nav" id="nav" hidden aria-label="Разделы">
+      <button type="button" data-go="home" aria-current="page"><svg class="i" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg><span>Главная</span></button>
+      <button type="button" data-go="history"><svg class="i" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg><span>История</span></button>
+      <button type="button" data-go="subs"><svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><span>Подписки</span></button>
+      <button type="button" data-go="more"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>Ещё</span></button>
+    </nav>
+    <div class="nav-fade" id="nav-fade" hidden></div>
+
+    <div class="sheet-bg" id="sheet-bg" hidden></div>
+    <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true"><div class="sheet__grab"></div><div id="sheet-body"></div></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script is:inline define:vars={{ tgAnalyticsToken }}>
-      function _initTgAnalytics() {
-        if (!tgAnalyticsToken || !window.telegramAnalytics) return;
-        try {
-          window.telegramAnalytics.init({ token: tgAnalyticsToken, appName: 'save_fast_as_video' });
-        } catch (e) { console.warn('tga init failed', e); }
-      }
-      // SDK аналитики грузим ПОСЛЕ load: tganalytics.xyz бывает висит без тела,
-      // а статичный <script async> держит событие load — Telegram тогда
-      // показывает заглушку загрузки вместо Mini App.
-      function _loadTgAnalytics() {
+      (function () {
         if (!tgAnalyticsToken) return;
-        const s = document.createElement('script');
-        s.async = true;
-        s.src = 'https://tganalytics.xyz/index.js';
-        s.onload = _initTgAnalytics;
-        document.head.appendChild(s);
-      }
-      if (document.readyState === 'complete') _loadTgAnalytics();
-      else window.addEventListener('load', _loadTgAnalytics, { once: true });
+        const load = () => {
+          const s = document.createElement('script');
+          s.async = true; s.src = 'https://tganalytics.xyz/index.js';
+          s.onload = () => { try { window.telegramAnalytics.init({ token: tgAnalyticsToken, appName: 'save_fast_as_video' }); } catch (e) {} };
+          document.head.appendChild(s);
+        };
+        // после load: tganalytics.xyz бывает отдаёт 200 без тела и держит событие load
+        if (document.readyState === 'complete') load(); else window.addEventListener('load', load, { once: true });
+      })();
     </script>
-
-    <script is:inline>
+    <script is:inline define:vars={{ BRANDS }}>
       (function () {
         const tg = window.Telegram && window.Telegram.WebApp;
-        const inTg = !!tg && tg.initData !== undefined && tg.initData !== '';
+        const inTg = !!(tg && tg.initData);
+        const $ = (s, r) => (r || document).querySelector(s);
+        const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+        const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const QL = { '1080': '1080p', '720': '720p', '480': '480p', audio: 'MP3' };
+        const PLAT_RU = { 'Twitter/X': 'X', VK: 'ВКонтакте', OK: 'Одноклассники', Unknown: 'Видео' };
+        const SUBP = { vk: 'VK', youtube: 'YouTube' };
+        const IC = {
+          chev: '<svg class="i" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>',
+          vid: '<svg class="i" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3z"/></svg>',
+          hist: '<svg class="i" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>',
+          bell: '<svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>',
+          tg: '<svg class="i" viewBox="0 0 24 24"><path d="m21 4-18 7 6 2 2 6 3-4 5 4z"/><path d="m9 13 8-6"/></svg>',
+          x: '<svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+          warn: '<svg class="i" viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></svg>',
+        };
+        const brand = (p) => {
+          const b = BRANDS[p];
+          return b ? '<span class="cell__ic cell__ic--brand"><svg viewBox="0 0 24 24"><path fill="' + b.c + '" d="' + b.p + '"/></svg></span>' : '<span class="cell__ic">' + IC.vid + '</span>';
+        };
 
+        // ── Telegram chrome ───────────────────────────────────────────
         if (tg) {
           try {
-            tg.ready();
-            tg.expand();
-            // theme adapt
-            const tp = tg.themeParams || {};
-            if (tp.bg_color) document.documentElement.style.setProperty('--bg', tp.bg_color);
-            if (tp.secondary_bg_color) document.documentElement.style.setProperty('--card', tp.secondary_bg_color);
-            if (tp.text_color) document.documentElement.style.setProperty('--text', tp.text_color);
-            if (tp.hint_color) document.documentElement.style.setProperty('--muted', tp.hint_color);
-            if (tp.button_color) {
-              document.documentElement.style.setProperty('--accent', tp.button_color);
-              if (tp.button_text_color) {
-                // ensure btn text contrasts
-              }
-            }
+            tg.ready(); tg.expand();
+            tg.setHeaderColor && tg.setHeaderColor('#f2f4f8');
+            tg.setBackgroundColor && tg.setBackgroundColor('#f2f4f8');
+            tg.setBottomBarColor && tg.setBottomBarColor('#f2f4f8');
+            tg.disableVerticalSwipes && tg.disableVerticalSwipes();
           } catch (e) {}
         }
+        const haptic = (t) => { try { inTg && tg.HapticFeedback && (t === 'ok' || t === 'err' ? tg.HapticFeedback.notificationOccurred(t === 'ok' ? 'success' : 'error') : tg.HapticFeedback.impactOccurred(t || 'light')); } catch (e) {} };
 
-        // helpers
-        const $ = (s, root) => (root || document).querySelector(s);
-        const $$ = (s, root) => Array.from((root || document).querySelectorAll(s));
-        const haptic = (style) => {
-          if (inTg && tg.HapticFeedback) {
-            try { tg.HapticFeedback.impactOccurred(style || 'light'); } catch (e) {}
-          }
-        };
-        const toast = (msg, danger) => {
-          const t = $('#toast');
-          t.textContent = msg;
-          t.classList.toggle('danger', !!danger);
-          t.classList.add('show');
-          setTimeout(() => t.classList.remove('show'), 2400);
+        let toastT;
+        const toast = (msg, err) => {
+          const t = $('#toast'); t.textContent = msg; t.className = 'toast on' + (err ? ' toast--err' : '');
+          clearTimeout(toastT); toastT = setTimeout(() => { t.className = 'toast' + (err ? ' toast--err' : ''); }, 2600);
+          haptic(err ? 'err' : 'ok');
         };
 
-        // tabs
-        $$('.tab').forEach(btn => {
-          btn.addEventListener('click', () => {
-            haptic('light');
-            const tab = btn.getAttribute('data-tab');
-            $$('.tab').forEach(b => b.classList.toggle('active', b === btn));
-            $$('.pane').forEach(p => p.classList.toggle('active', p.getAttribute('data-pane') === tab));
-            if (window.telegramAnalytics) {
-              try { window.telegramAnalytics.event('tab_switch', { tab }); } catch (e) {}
-            }
-          });
-        });
-
-        // quality buttons (download tab & settings tab)
-        const wireQualityGroup = (groupSel) => {
-          const group = $(groupSel);
-          if (!group) return;
-          $$('button', group).forEach(btn => {
-            btn.addEventListener('click', () => {
-              haptic('light');
-              $$('button', group).forEach(b => b.classList.toggle('active', b === btn));
-            });
-          });
-        };
-        wireQualityGroup('#dl-quality');
-        wireQualityGroup('#settings-quality');
-
-        const getActiveQuality = (groupSel) => {
-          const active = $(groupSel + ' button.active');
-          return active ? active.getAttribute('data-q') : '720';
-        };
-
-        // ─── Browser auth (вне Telegram) ─────────────────────────────────
-        const BOT_USERNAME = 'SaveFastVideoFreebot';
-        const SESSION_KEY = 'sfv_session';
-        let session = null; // {token, user}
-
-        const loadSession = () => {
-          try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }
-          catch (e) { return null; }
-        };
-        const saveSession = (s) => {
-          session = s;
-          if (s) localStorage.setItem(SESSION_KEY, JSON.stringify(s));
-          else localStorage.removeItem(SESSION_KEY);
-        };
-
-        const api = async (path, opts) => {
-          const o = opts || {};
-          const headers = Object.assign(
-            { 'Content-Type': 'application/json' },
-            session ? { 'Authorization': 'Bearer ' + session.token } : {},
-            o.headers || {}
-          );
-          const res = await fetch(path, Object.assign({}, o, { headers }));
-          let data = null;
-          try { data = await res.json(); } catch (e) {}
-          if (res.status === 401) { saveSession(null); setMode(); }
-          return { ok: res.ok, status: res.status, data };
-        };
-
-        const showBrowserApp = () => {
-          document.body.classList.remove('is-stub');
-          $('#auth').hidden = true;
-          $('#userbar').hidden = false;
-          const u = session.user || {};
-          $('#userbar-name').innerHTML =
-            '👤 ' + (u.first_name || 'Пользователь') +
-            (u.username ? ' <span>@' + u.username + '</span>' : '');
-          document.querySelector('.tabs').style.display = '';
-          $$('.pane').forEach(p => p.style.display = '');
-          $('#dl-submit').textContent = '⬇️ Скачать';
-          $('#dl-hint').textContent = 'Файл скачается прямо в браузер.';
-        };
-
-        const showAuthGate = () => {
-          document.body.classList.add('is-stub');
-          $('#auth').hidden = false;
-          $('#userbar').hidden = true;
-          document.querySelector('.tabs').style.display = 'none';
-          $$('.pane').forEach(p => p.style.display = 'none');
-        };
-
-        const setMode = () => {
-          if (inTg) return; // Mini App — всё как было
-          if (session) showBrowserApp();
-          else showAuthGate();
-        };
-
-        // Telegram Login Widget (требует /setdomain у BotFather; если домен
-        // не привязан — виджет просто не отрисуется, останется кнопка бота)
-        window.onTelegramAuth = async (user) => {
-          const r = await api('/api/auth/telegram', { method: 'POST', body: JSON.stringify(user) });
-          if (r.ok && r.data && r.data.token) {
-            saveSession({ token: r.data.token, user: r.data.user });
-            setMode();
-            toast('Добро пожаловать, ' + (r.data.user.first_name || '') + '!');
-          } else {
-            toast('Не удалось войти — попробуй через бота', true);
-          }
-        };
-
-        const mountWidget = () => {
-          const s = document.createElement('script');
-          s.src = 'https://telegram.org/js/telegram-widget.js?22';
-          s.setAttribute('data-telegram-login', BOT_USERNAME);
-          s.setAttribute('data-size', 'large');
-          s.setAttribute('data-radius', '12');
-          s.setAttribute('data-onauth', 'onTelegramAuth(user)');
-          s.setAttribute('data-request-access', 'write');
-          $('#tg-widget').appendChild(s);
-        };
-
-        // Вход через бота (deep-link + поллинг) — работает всегда
-        let pollTimer = null;
-        $('#bot-login') && $('#bot-login').addEventListener('click', async () => {
-          const btn = $('#bot-login');
-          btn.disabled = true;
-          btn.innerHTML = '<span class="spin"></span> Ожидаю подтверждения…';
-          $('#auth-status').textContent = 'Открой бота и нажми START — вход подтвердится сам.';
-          const r = await api('/api/auth/bot-start', { method: 'POST', body: '{}' });
-          if (!r.ok || !r.data || !r.data.link) {
-            btn.disabled = false;
-            btn.textContent = 'Войти в веб-версию';
-            toast('Сервис входа недоступен, попробуй позже', true);
-            return;
-          }
-          window.open(r.data.link, '_blank');
-          const code = r.data.code;
-          $('#auth-status').innerHTML =
-            'Код этой сессии: <b style="color:var(--text); letter-spacing:2px;">' +
-            (r.data.short || '—') +
-            '</b><br/>Открой бота и подтверди вход, если код совпадает.';
-          const started = Date.now();
-          clearInterval(pollTimer);
-          pollTimer = setInterval(async () => {
-            if (Date.now() - started > 5 * 60 * 1000) {
-              clearInterval(pollTimer);
-              btn.disabled = false;
-              btn.textContent = 'Войти в веб-версию';
-              $('#auth-status').textContent = 'Время вышло — нажми ещё раз.';
-              return;
-            }
-            const p = await api('/api/auth/bot-poll?code=' + code);
-            if (p.data && p.data.status === 'ok') {
-              clearInterval(pollTimer);
-              saveSession({ token: p.data.token, user: p.data.user });
-              setMode();
-              toast('Добро пожаловать, ' + (p.data.user.first_name || '') + '!');
-            } else if (p.data && p.data.status === 'expired') {
-              clearInterval(pollTimer);
-              btn.disabled = false;
-              btn.textContent = 'Войти в веб-версию';
-              $('#auth-status').textContent = 'Код устарел — нажми ещё раз.';
-            }
-          }, 2000);
-        });
-
-        $('#logout') && $('#logout').addEventListener('click', () => {
-          saveSession(null);
-          setMode();
-        });
-
-        // ─── Отправка действий: Mini App → sendData, браузер → API ───────
-        const sendToBot = (payload) => {
-          const json = JSON.stringify(payload);
+        // ── API ───────────────────────────────────────────────────────
+        let token = null;
+        const SKEY = 'sfv_session';
+        const loadSession = () => { try { return JSON.parse(localStorage.getItem(SKEY) || 'null'); } catch (e) { return null; } };
+        const saveSession = (s) => { try { s ? localStorage.setItem(SKEY, JSON.stringify(s)) : localStorage.removeItem(SKEY); } catch (e) {} };
+        const api = async (path, o) => {
+          o = o || {};
+          const headers = Object.assign({ 'Content-Type': 'application/json' }, token ? { Authorization: 'Bearer ' + token } : {});
           try {
-            tg.sendData(json); // sendData auto-closes the mini-app in TG client
-          } catch (e) {
-            console.error('sendData failed', e);
-            toast('Не удалось отправить — открой бот вручную', true);
-          }
+            const res = await fetch(path, Object.assign({}, o, { headers }));
+            let data = null; try { data = await res.json(); } catch (e) {}
+            return { ok: res.ok, status: res.status, data: data || {} };
+          } catch (e) { return { ok: false, status: 0, data: { message: 'Нет связи с сервером' } }; }
         };
 
-        const fmtSize = (bytes) => {
-          if (!bytes) return '';
-          const mb = bytes / 1048576;
-          return mb >= 1 ? mb.toFixed(1) + ' MB' : Math.round(bytes / 1024) + ' KB';
+        // ── state ─────────────────────────────────────────────────────
+        const S = { me: null, history: null, subs: null, admin: null, dlQ: '720', hFilter: 'all' };
+
+        // ── navigation ────────────────────────────────────────────────
+        const stack = [];
+        const show = (name, push) => {
+          const cur = ($('.screen:not([hidden])') || {}).dataset;
+          if (push !== false && cur && cur.screen !== name) stack.push(cur.screen);
+          $$('.screen').forEach((s) => { s.hidden = s.dataset.screen !== name; });
+          const tab = name === 'admin' ? 'more' : name;
+          $$('#nav button').forEach((b) => { if (b.dataset.go === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+          window.scrollTo(0, 0);
+          if (inTg && tg.BackButton) { try { name === 'home' ? tg.BackButton.hide() : tg.BackButton.show(); } catch (e) {} }
+          if (name === 'history') renderHistory();
+          if (name === 'subs') renderSubs();
+          if (name === 'admin') loadAdmin();
         };
-
-        const browserDownload = async (url, quality) => {
-          const btn = $('#dl-submit');
-          btn.disabled = true;
-          btn.innerHTML = '<span class="spin"></span> Скачиваю…';
-          $('#dl-results').innerHTML = '';
-          try {
-            const r = await api('/api/download', {
-              method: 'POST',
-              body: JSON.stringify({ url, quality }),
-            });
-            if (!r.ok) {
-              toast((r.data && r.data.message) || 'Не удалось скачать', true);
-              return;
-            }
-            const items = (r.data && r.data.items) || [];
-            const box = $('#dl-results');
-            items.forEach((it, i) => {
-              const row = document.createElement('div');
-              row.className = 'result-item';
-              row.innerHTML =
-                '<div class="meta"><div class="name">' +
-                (it.filename || 'файл ' + (i + 1)) +
-                '</div><div class="size">' + fmtSize(it.size) + '</div></div>';
-              const a = document.createElement('a');
-              a.href = '/api/file/' + it.token;
-              a.textContent = '⬇️ Сохранить';
-              a.setAttribute('download', it.filename || '');
-              row.appendChild(a);
-              box.appendChild(row);
-            });
-            if (items.length === 1) {
-              // один файл — сразу дёргаем скачивание
-              const a = box.querySelector('a');
-              if (a) a.click();
-            }
-            toast(items.length > 1 ? 'Готово: ' + items.length + ' файла(ов)' : 'Готово!');
-          } finally {
-            btn.disabled = false;
-            btn.textContent = '⬇️ Скачать';
-          }
-        };
-
-        // DOWNLOAD submit
-        $('#dl-submit').addEventListener('click', () => {
-          const url = $('#dl-url').value.trim();
-          if (!url) {
-            haptic('medium');
-            toast('Вставь ссылку на видео', true);
-            return;
-          }
-          haptic('medium');
-          if (window.telegramAnalytics) {
-            try { window.telegramAnalytics.event('download_submit', { quality: getActiveQuality('#dl-quality') }); } catch (e) {}
-          }
-          const quality = getActiveQuality('#dl-quality');
-          if (inTg) {
-            sendToBot({ v: 1, type: 'download', url, quality });
-          } else {
-            browserDownload(url, quality);
-          }
+        document.addEventListener('click', (e) => {
+          const g = e.target.closest('[data-go]');
+          if (g) { haptic(); if (g.closest('#nav')) stack.length = 0; show(g.dataset.go); }
         });
-
-        // SUBSCRIBE submit
-        $('#sub-submit').addEventListener('click', async () => {
-          const url = $('#sub-url').value.trim();
-          if (!url) {
-            haptic('medium');
-            toast('Вставь ссылку на канал', true);
-            return;
-          }
-          haptic('medium');
-          if (window.telegramAnalytics) {
-            try { window.telegramAnalytics.event('subscribe_submit'); } catch (e) {}
-          }
-          if (inTg) {
-            sendToBot({ v: 1, type: 'subscribe', url });
-            return;
-          }
-          const r = await api('/api/subscribe', { method: 'POST', body: JSON.stringify({ url }) });
-          if (r.ok && r.data && r.data.ok) {
-            toast(r.data.added
-              ? '✅ Подписка добавлена: ' + (r.data.title || '')
-              : 'Ты уже подписан на этот аккаунт');
-          } else {
-            toast((r.data && r.data.message) || 'Не удалось подписаться', true);
-          }
-        });
-
-        // SETTINGS submit
-        $('#settings-submit').addEventListener('click', async () => {
-          haptic('medium');
-          const q = getActiveQuality('#settings-quality');
-          if (window.telegramAnalytics) {
-            try { window.telegramAnalytics.event('quality_set', { quality: q }); } catch (e) {}
-          }
-          if (inTg) {
-            sendToBot({ v: 1, type: 'set_quality', quality: q });
-            return;
-          }
-          const r = await api('/api/quality', { method: 'POST', body: JSON.stringify({ quality: q }) });
-          toast(r.ok ? '💾 Качество сохранено' : 'Не удалось сохранить', !r.ok);
-        });
-
-        // ─── Init ─────────────────────────────────────────────────────────
-        if (!inTg) {
-          session = loadSession();
-          // Login Widget не монтируем: домен не привязан в BotFather → «Bot domain invalid».
-          setMode();
-          // валидируем сохранённую сессию в фоне
-          if (session) {
-            api('/api/me').then(r => {
-              if (!r.ok) { saveSession(null); setMode(); }
-            });
-          }
-        }
-
-        // BackButton: close on tap
         if (inTg && tg.BackButton) {
-          try {
-            tg.BackButton.onClick(() => tg.close());
-            tg.BackButton.show();
-          } catch (e) {}
+          try { tg.BackButton.onClick(() => { if (!sheetClose()) show(stack.pop() || 'home', false); }); } catch (e) {}
+        }
+
+        // ── sheet ─────────────────────────────────────────────────────
+        const sheetOpen = (html) => {
+          $('#sheet-body').innerHTML = html;
+          $('#sheet-bg').hidden = false; $('#sheet').hidden = false;
+          requestAnimationFrame(() => { $('#sheet-bg').classList.add('on'); $('#sheet').classList.add('on'); });
+          if (inTg && tg.BackButton) try { tg.BackButton.show(); } catch (e) {}
+        };
+        const sheetClose = () => {
+          if ($('#sheet').hidden) return false;
+          $('#sheet-bg').classList.remove('on'); $('#sheet').classList.remove('on');
+          setTimeout(() => { $('#sheet-bg').hidden = true; $('#sheet').hidden = true; }, 260);
+          if (inTg && tg.BackButton && ($('.screen:not([hidden])') || {}).dataset?.screen === 'home') try { tg.BackButton.hide(); } catch (e) {}
+          return true;
+        };
+        $('#sheet-bg').addEventListener('click', sheetClose);
+
+        // ── helpers ───────────────────────────────────────────────────
+        const fmtTime = (iso) => { const d = new Date(String(iso).replace(' ', 'T') + 'Z'); return isNaN(d) ? '' : d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }); };
+        const dayLabel = (iso) => {
+          const d = new Date(String(iso).replace(' ', 'T') + 'Z'); if (isNaN(d)) return '';
+          const t = new Date(); const y = new Date(); y.setDate(t.getDate() - 1);
+          if (d.toDateString() === t.toDateString()) return 'Сегодня';
+          if (d.toDateString() === y.toDateString()) return 'Вчера';
+          return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+        };
+        const host = (u) => { try { return new URL(u).hostname.replace(/^www\.|^m\./, ''); } catch (e) { return u; } };
+        const plural = (n, a, b, c) => { n = Math.abs(n) % 100; const n1 = n % 10; return n > 10 && n < 20 ? c : n1 > 1 && n1 < 5 ? b : n1 === 1 ? a : c; };
+        const setSeg = (el, q) => $$('button', el).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.q === q)));
+        const empty = (icon, title, text) => '<div class="empty"><div class="empty__ic">' + icon + '</div><b>' + title + '</b>' + text + '</div>';
+        const skelCells = (n) => Array.from({ length: n }, () => '<div class="cell"><span class="cell__ic sk"></span><span class="cell__body"><span class="sk" style="height:14px;width:60%"></span><span class="sk" style="height:11px;width:40%;margin-top:6px"></span></span></div>').join('');
+        const skel = (n) => '<div class="card">' + Array.from({ length: n }, () => '<div class="cell"><span class="cell__ic sk"></span><span class="cell__body"><span class="sk" style="height:14px;width:60%"></span><span class="sk" style="height:11px;width:40%;margin-top:6px"></span></span></div>').join('') + '</div>';
+
+        const histCell = (it) => {
+          const title = it.title && !/^-?\d+_\d+\.\w+$|^[\w-]+\.(mp4|jpg|mp3|webm)$/i.test(it.title) ? it.title : host(it.url);
+          const plat = PLAT_RU[it.platform] || it.platform || 'Видео';
+          const pill = it.status === 'ok' ? '<span class="pill pill--ok">Скачано</span>' : '<span class="pill pill--fail">Ошибка</span>';
+          return '<button class="cell" type="button" data-again="' + esc(it.url) + '">' + brand(it.platform) +
+            '<span class="cell__body"><span class="cell__t">' + esc(title) + '</span><span class="cell__s">' + esc(plat) + (it.quality ? ' · ' + esc(QL[it.quality] || it.quality) : '') + ' · ' + fmtTime(it.created_at) + '</span></span>' +
+            '<span class="cell__end">' + pill + '</span></button>';
+        };
+
+        // ── render: home ──────────────────────────────────────────────
+        const renderHome = () => {
+          const m = S.me || {}; const u = m.user || {};
+          const name = u.first_name || (u.username ? '@' + u.username : 'Гость');
+          $('#h-ava').textContent = (name.replace('@', '')[0] || 'S').toUpperCase();
+          $('#h-name').textContent = name;
+          $('#h-q').textContent = QL[m.quality] || '720p';
+          $('#h-count').textContent = m.downloads != null ? Number(m.downloads).toLocaleString('ru-RU') : '—';
+          const sc = m.subs_count || 0;
+          if (m.subs_count != null) { $('#h-subs').hidden = false; $('#h-subs').textContent = sc + ' ' + plural(sc, 'подписка', 'подписки', 'подписок'); }
+          $('#admin-entry').hidden = !m.is_admin;
+          $('#more-sub').textContent = u.username ? '@' + u.username : 'Настройки и помощь';
+          setSeg($('#set-q'), m.quality || '720');
+          const r = $('#recent');
+          if (!S.history) { r.innerHTML = skelCells(2); return; }
+          const items = S.history.slice(0, 3);
+          r.innerHTML = items.length ? items.map(histCell).join('') : empty(IC.hist, 'Пока пусто', 'Скачайте первое видео — оно появится здесь');
+        };
+
+        // ── render: history ───────────────────────────────────────────
+        const renderHistory = () => {
+          const box = $('#history');
+          if (!S.history) { box.innerHTML = skel(4); return; }
+          const all = S.history;
+          $$('#h-filter .chip').forEach((c) => {
+            const n = c.dataset.f === 'all' ? all.length : all.filter((i) => i.status === c.dataset.f).length;
+            c.innerHTML = { all: 'Все', ok: 'Скачано', fail: 'Ошибки' }[c.dataset.f] + ' <b>' + n + '</b>';
+            c.setAttribute('aria-pressed', String(c.dataset.f === S.hFilter));
+          });
+          const list = S.hFilter === 'all' ? all : all.filter((i) => i.status === S.hFilter);
+          if (!list.length) { box.innerHTML = '<div class="card">' + empty(IC.hist, all.length ? 'Ничего не найдено' : 'История пуста', all.length ? 'В этом фильтре нет записей' : 'Здесь будут все ваши скачивания') + '</div>'; return; }
+          let html = '', day = null, open = false;
+          list.forEach((it) => {
+            const d = dayLabel(it.created_at);
+            if (d !== day) { if (open) html += '</div>'; html += '<div class="day">' + esc(d) + '</div><div class="card">'; open = true; day = d; }
+            html += histCell(it);
+          });
+          if (open) html += '</div>';
+          box.innerHTML = html;
+        };
+        $('#h-filter').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (!c) return; haptic(); S.hFilter = c.dataset.f; renderHistory(); });
+
+        // ── render: subs ──────────────────────────────────────────────
+        const renderSubs = () => {
+          const box = $('#subs');
+          if (!S.subs) { box.innerHTML = skel(2); return; }
+          $('#subs-title').textContent = 'Мои подписки' + (S.subs.length ? ' · ' + S.subs.length : '');
+          if (!S.subs.length) { box.innerHTML = '<div class="card">' + empty(IC.bell, 'Нет подписок', 'Добавьте YouTube-канал или страницу VK — новые видео будут приходить в чат') + '</div>'; return; }
+          box.innerHTML = '<div class="card">' + S.subs.map((s) => {
+            const p = SUBP[s.platform] || s.platform;
+            return '<div class="cell">' + brand(p) + '<span class="cell__body"><span class="cell__t">' + esc(s.account_title || s.account_handle || s.account_id) + '</span><span class="cell__s">' + esc(p) + (s.account_handle ? ' · ' + esc(s.account_handle) : '') + '</span></span>' +
+              '<button class="field__btn" type="button" data-unsub="' + s.id + '" aria-label="Отписаться">' + IC.x + '</button></div>';
+          }).join('') + '</div>';
+        };
+
+        // ── render: admin ─────────────────────────────────────────────
+        const renderAdmin = () => {
+          const a = S.admin;
+          if (!a) { $('#a-tiles').innerHTML = Array.from({ length: 6 }, () => '<div class="tile"><div class="sk" style="height:24px;width:60%"></div><div class="sk" style="height:11px;width:80%;margin-top:8px"></div></div>').join(''); $('#a-channels').innerHTML = ''; $('#a-plats').innerHTML = ''; return; }
+          const st = a.stats; const n = (v) => Number(v || 0).toLocaleString('ru-RU');
+          const tiles = [
+            [n(st.users), 'Пользователей'], ['+' + n(st.new_1d), 'Новых за сутки'], ['+' + n(st.new_7d), 'Новых за 7 дней'],
+            [n(st.downloads), 'Скачиваний всего'], [n(st.ok_1d), 'Успешно за сутки', 'ok'], [n(st.fail_1d), 'Ошибок за сутки', 'fail'],
+          ];
+          $('#a-tiles').innerHTML = tiles.map((t) => '<div class="tile' + (t[2] ? ' tile--' + t[2] : '') + '"><div class="tile__v">' + t[0] + '</div><div class="tile__l">' + t[1] + '</div></div>').join('');
+          const pl = st.platforms_7d || []; const max = Math.max(1, ...pl.map((p) => p.count));
+          const subsLine = Object.keys(st.subs || {}).map((k) => (SUBP[k] || k) + ': ' + st.subs[k]).join(' · ');
+          $('#a-plats').innerHTML = (pl.length ? pl.map((p) => {
+            const b = BRANDS[p.platform];
+            return '<div class="bar"><span class="bar__ic">' + (b ? '<svg viewBox="0 0 24 24"><path fill="' + b.c + '" d="' + b.p + '"/></svg>' : '') + '</span><span><span style="display:flex;justify-content:space-between"><span>' + esc(PLAT_RU[p.platform] || p.platform) + '</span></span><span class="bar__track" style="display:block;margin-top:5px"><span class="bar__fill" style="display:block;width:' + Math.round(p.count / max * 100) + '%"></span></span></span><b>' + n(p.count) + '</b></div>';
+          }).join('') : '<p class="hint" style="margin:14px 0 4px">Данные появятся после первых скачиваний</p>') +
+            (subsLine ? '<p class="hint" style="text-align:left;margin-top:14px">Подписки пользователей на каналы: ' + esc(subsLine) + '</p>' : '');
+          const ch = a.channels || [];
+          const active = ch.filter((c) => c.active).length;
+          $('#a-ch-title').textContent = 'Каналы · ' + active + ' из ' + ch.length;
+          $('#a-channels').innerHTML = ch.length ? ch.map((c) => {
+            const warn = c.check_failures > 0;
+            return '<div class="cell"><button class="cell" style="padding:0;flex:1;min-width:0" type="button" data-ch="' + c.id + '"><span class="cell__ic">' + (warn ? IC.warn : IC.tg) + '</span><span class="cell__body"><span class="cell__t">' + esc(c.username) + '</span><span class="cell__s">' +
+              (c.active ? (warn ? '<span style="color:var(--warning)">Бот не может проверить подписку</span>' : 'Активен') : 'На паузе') + ' · ' + esc(c.chat_id) + '</span></span></button>' +
+              '<button class="sw" type="button" role="switch" aria-checked="' + (c.active ? 'true' : 'false') + '" aria-label="Включить канал" data-toggle="' + c.id + '"></button></div>';
+          }).join('') : empty(IC.tg, 'Каналов нет', 'Добавьте канал — бот начнёт просить на него подписаться');
+        };
+
+        // ── loaders ───────────────────────────────────────────────────
+        const loadAll = async () => {
+          renderHome();
+          const [me, h, s] = await Promise.all([api('/api/me'), api('/api/history?limit=100'), api('/api/subscriptions')]);
+          if (me.status === 401) return relogin();
+          if (me.ok) { S.me = me.data; S.dlQ = me.data.quality || '720'; setSeg($('#dl-q'), S.dlQ); }
+          S.history = h.ok ? (h.data.items || []) : [];
+          S.subs = s.ok ? (s.data.items || []) : [];
+          renderHome();
+          const cur = ($('.screen:not([hidden])') || {}).dataset.screen;
+          if (cur === 'history') renderHistory();
+          if (cur === 'subs') renderSubs();
+        };
+        const loadAdmin = async () => {
+          renderAdmin();
+          const r = await api('/api/admin/overview');
+          if (!r.ok) { toast(r.status === 403 ? 'Нет доступа' : 'Не удалось загрузить', true); return; }
+          S.admin = r.data; renderAdmin();
+        };
+
+        // ── actions ───────────────────────────────────────────────────
+        const paste = async () => {
+          haptic();
+          let txt = '';
+          try { txt = await navigator.clipboard.readText(); } catch (e) {}
+          if (!txt && inTg && tg.readTextFromClipboard) {
+            try { txt = await new Promise((res) => tg.readTextFromClipboard((t) => res(t || ''))); } catch (e) {}
+          }
+          const inp = $('#dl-url');
+          if (txt) { inp.value = txt.trim(); } else { toast('Вставьте ссылку в поле вручную'); }
+          if (($('.screen:not([hidden])') || {}).dataset.screen !== 'home') show('home');
+          inp.focus();
+        };
+        const send = async (url, q) => {
+          url = (url || '').trim();
+          if (!url) { $('#dl-url').focus(); toast('Вставьте ссылку на видео', true); return; }
+          const b = $('#dl-go'); b.disabled = true; const old = b.innerHTML; b.innerHTML = '<span class="spin"></span> Отправляю…';
+          const r = await api('/api/send', { method: 'POST', body: JSON.stringify({ url, quality: q || S.dlQ }) });
+          b.disabled = false; b.innerHTML = old;
+          if (r.ok) {
+            $('#dl-url').value = '';
+            if (r.data.gate) {
+              haptic('ok');
+              sheetOpen('<h3>Остался один шаг</h3><p class="sub">Подпишитесь на канал в чате с ботом — и видео сразу придёт.</p><button class="btn" type="button" id="gate-go">Перейти в чат</button>');
+              $('#gate-go').addEventListener('click', () => { try { tg.close(); } catch (e) { sheetClose(); } });
+            } else {
+              toast('Готово! Видео придёт в чат');
+              if (inTg) setTimeout(() => { try { tg.close(); } catch (e) {} }, 1200);
+            }
+            setTimeout(loadAll, 4000);
+          } else {
+            toast((r.data && r.data.message) || 'Не получилось отправить — попробуйте ещё раз', true);
+          }
+        };
+
+        document.addEventListener('click', async (e) => {
+          const t = e.target.closest('[data-act],[data-q],[data-again],[data-unsub],[data-toggle],[data-ch]');
+          if (!t) return;
+          if (t.dataset.act === 'paste') return paste();
+          if (t.dataset.act === 'quality') { haptic(); return show('more'); }
+          if (t.dataset.act === 'admin-refresh') { haptic(); return loadAdmin(); }
+          if (t.dataset.act === 'ch-add') return openAddChannel();
+          if (t.dataset.q && t.closest('#dl-q')) { haptic(); S.dlQ = t.dataset.q; setSeg($('#dl-q'), S.dlQ); return; }
+          if (t.dataset.q && t.closest('#set-q')) {
+            haptic(); setSeg($('#set-q'), t.dataset.q);
+            const r = await api('/api/quality', { method: 'POST', body: JSON.stringify({ quality: t.dataset.q }) });
+            if (r.ok) { S.me && (S.me.quality = t.dataset.q); S.dlQ = t.dataset.q; setSeg($('#dl-q'), S.dlQ); renderHome(); toast('Качество: ' + QL[t.dataset.q]); }
+            else toast('Не удалось сохранить', true);
+            return;
+          }
+          if (t.dataset.again) {
+            haptic();
+            const url = t.dataset.again;
+            sheetOpen('<h3>Скачать снова?</h3><p class="sub">' + esc(url) + '</p><div class="lbl">Качество</div><div class="seg" id="again-q">' +
+              ['1080', '720', '480', 'audio'].map((q) => '<button type="button" data-aq="' + q + '" aria-pressed="' + (q === S.dlQ) + '">' + QL[q] + '</button>').join('') +
+              '</div><button class="btn" type="button" id="again-go">Скачать в чат</button><button class="btn btn--ghost" type="button" id="again-copy">Скопировать ссылку</button>');
+            let aq = S.dlQ;
+            $('#again-q').addEventListener('click', (ev) => { const x = ev.target.closest('[data-aq]'); if (!x) return; aq = x.dataset.aq; $$('#again-q button').forEach((y) => y.setAttribute('aria-pressed', String(y === x))); haptic(); });
+            $('#again-go').addEventListener('click', () => { sheetClose(); send(url, aq); });
+            $('#again-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(url); toast('Ссылка скопирована'); } catch (er) { toast('Не удалось скопировать', true); } sheetClose(); });
+            return;
+          }
+          if (t.dataset.unsub) {
+            const id = Number(t.dataset.unsub);
+            const go = async () => {
+              const r = await api('/api/subscriptions/remove', { method: 'POST', body: JSON.stringify({ id }) });
+              if (r.ok) { S.subs = S.subs.filter((s) => s.id !== id); S.me && (S.me.subs_count = S.subs.length); renderSubs(); renderHome(); toast('Подписка удалена'); }
+              else toast('Не удалось отписаться', true);
+            };
+            if (inTg && tg.showConfirm) tg.showConfirm('Отписаться от этого канала?', (ok) => ok && go()); else go();
+            return;
+          }
+          if (t.dataset.toggle) {
+            const id = Number(t.dataset.toggle);
+            const on = t.getAttribute('aria-checked') !== 'true';
+            t.setAttribute('aria-checked', String(on)); haptic('medium');
+            const r = await api('/api/admin/channel', { method: 'POST', body: JSON.stringify({ action: 'toggle', id }) });
+            if (!r.ok) { t.setAttribute('aria-checked', String(!on)); toast('Не удалось переключить', true); return; }
+            const c = S.admin.channels.find((x) => x.id === id); if (c) c.active = on ? 1 : 0;
+            renderAdmin(); toast(on ? 'Канал включён' : 'Канал на паузе');
+            return;
+          }
+          if (t.dataset.ch) {
+            const c = S.admin.channels.find((x) => x.id === Number(t.dataset.ch)); if (!c) return;
+            haptic();
+            sheetOpen('<h3>' + esc(c.username) + '</h3><p class="sub">ID: ' + esc(c.chat_id) + '<br>' + esc(c.url) + (c.check_failures ? '<br><span style="color:var(--warning)">Бот не смог проверить подписку ' + c.check_failures + ' раз — добавьте его админом в канал</span>' : '') + '</p>' +
+              '<button class="btn btn--ghost" type="button" id="ch-open">Открыть канал</button><button class="btn btn--danger" type="button" id="ch-del">Удалить канал</button>');
+            $('#ch-open').addEventListener('click', () => { try { inTg ? tg.openTelegramLink(c.url) : window.open(c.url, '_blank'); } catch (er) { window.open(c.url, '_blank'); } });
+            $('#ch-del').addEventListener('click', () => {
+              const go = async () => {
+                const r = await api('/api/admin/channel', { method: 'POST', body: JSON.stringify({ action: 'delete', id: c.id }) });
+                if (r.ok) { sheetClose(); S.admin.channels = S.admin.channels.filter((x) => x.id !== c.id); renderAdmin(); toast('Канал удалён'); } else toast('Не удалось удалить', true);
+              };
+              if (inTg && tg.showConfirm) tg.showConfirm('Удалить «' + c.username + '» из списка? Это нельзя отменить.', (ok) => ok && go()); else go();
+            });
+          }
+        });
+
+        const openAddChannel = () => {
+          haptic();
+          sheetOpen('<h3>Новый канал</h3><p class="sub">Бот будет просить подписаться на этот канал. Сначала добавьте бота-проверяльщика админом в канал.</p>' +
+            '<div class="lbl">Название</div><div class="field"><input id="nc-title" placeholder="Например, Кино за 5 минут" maxlength="80"></div>' +
+            '<div class="lbl">ID канала</div><div class="field"><input id="nc-id" inputmode="numeric" placeholder="-1001234567890"></div>' +
+            '<p class="hint" style="text-align:left">Перешлите любой пост канала в @JsonDumpBot — ID будет в поле forward_from_chat.id</p>' +
+            '<div class="lbl">Ссылка-приглашение</div><div class="field"><input id="nc-url" inputmode="url" placeholder="https://t.me/+AbCdEf…"></div>' +
+            '<button class="btn" type="button" id="nc-go">Добавить канал</button>');
+          $('#nc-go').addEventListener('click', async () => {
+            const title = $('#nc-title').value.trim(), chat_id = $('#nc-id').value.trim(), url = $('#nc-url').value.trim();
+            if (!title || !/^-100\d{5,}$/.test(chat_id) || !/^https:\/\/t\.me\/\S+$/.test(url)) { toast('Проверьте поля: ID начинается с -100, ссылка — https://t.me/…', true); return; }
+            const b = $('#nc-go'); b.disabled = true;
+            const r = await api('/api/admin/channel', { method: 'POST', body: JSON.stringify({ action: 'add', title, chat_id, url }) });
+            b.disabled = false;
+            if (r.ok) { sheetClose(); toast('Канал добавлен'); loadAdmin(); }
+            else toast(r.status === 409 ? 'Такой канал уже есть' : 'Не удалось добавить', true);
+          });
+        };
+
+        $('#dl-go').addEventListener('click', () => { haptic('medium'); send($('#dl-url').value); });
+        $('#dl-url').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); send($('#dl-url').value); } });
+        $('#sub-go').addEventListener('click', async () => {
+          const url = $('#sub-url').value.trim();
+          if (!url) { toast('Вставьте ссылку на канал', true); return; }
+          const b = $('#sub-go'); b.disabled = true; b.innerHTML = '<span class="spin"></span> Проверяю…';
+          const r = await api('/api/subscribe', { method: 'POST', body: JSON.stringify({ url }) });
+          b.disabled = false; b.textContent = 'Подписаться';
+          if (r.ok) { $('#sub-url').value = ''; toast('Подписка добавлена'); const s = await api('/api/subscriptions'); if (s.ok) { S.subs = s.data.items || []; S.me && (S.me.subs_count = S.subs.length); renderSubs(); renderHome(); } }
+          else toast((r.data && (r.data.message || (r.data.error === 'bad_url' ? 'Нужна ссылка на YouTube-канал или страницу VK' : ''))) || 'Не удалось подписаться', true);
+        });
+
+        // ── boot ──────────────────────────────────────────────────────
+        const startApp = () => {
+          document.body.classList.remove('is-stub');
+          $('#auth').hidden = true; $('#app').hidden = false; $('#nav').hidden = false; $('#nav-fade').hidden = false;
+          setSeg($('#dl-q'), S.dlQ);
+          show('home', false);
+          loadAll();
+        };
+        const relogin = async () => {
+          token = null;
+          if (inTg) {
+            const r = await api('/api/auth/miniapp', { method: 'POST', body: JSON.stringify({ init_data: tg.initData }) });
+            if (r.ok && r.data.token) { token = r.data.token; return loadAll(); }
+            toast('Не удалось войти — откройте приложение заново', true);
+          } else { saveSession(null); showStub(); }
+        };
+        const showStub = () => { document.body.classList.add('is-stub'); $('#auth').hidden = false; $('#app').hidden = true; $('#nav').hidden = true; $('#nav-fade').hidden = true; };
+
+        if (inTg) {
+          startApp();
+          (async () => {
+            const r = await api('/api/auth/miniapp', { method: 'POST', body: JSON.stringify({ init_data: tg.initData }) });
+            if (r.ok && r.data.token) { token = r.data.token; loadAll(); }
+            else { S.history = []; S.subs = []; renderHome(); toast('Не удалось войти — откройте приложение заново', true); }
+          })();
+        } else {
+          const sess = loadSession();
+          if (sess && sess.token) { token = sess.token; startApp(); } else showStub();
+          // вход в веб-версию через бота (deep-link + поллинг)
+          let poll = null;
+          const btn = $('#bot-login');
+          btn && btn.addEventListener('click', async () => {
+            btn.disabled = true; btn.textContent = 'Ожидаю подтверждения…';
+            $('#auth-status').textContent = 'Откройте бота и нажмите START — вход подтвердится сам.';
+            const r = await api('/api/auth/bot-start', { method: 'POST', body: '{}' });
+            if (!r.ok || !r.data.link) { btn.disabled = false; btn.textContent = 'Открыть в браузере'; toast('Сервис входа недоступен', true); return; }
+            window.open(r.data.link, '_blank');
+            $('#auth-status').innerHTML = 'Код сессии: <b style="color:var(--fg);letter-spacing:2px">' + esc(r.data.short || '—') + '</b><br>Подтвердите вход в боте, если код совпадает.';
+            const started = Date.now(); clearInterval(poll);
+            poll = setInterval(async () => {
+              if (Date.now() - started > 5 * 60 * 1000) { clearInterval(poll); btn.disabled = false; btn.textContent = 'Открыть в браузере'; $('#auth-status').textContent = 'Время вышло — нажмите ещё раз.'; return; }
+              const p = await api('/api/auth/bot-poll?code=' + encodeURIComponent(r.data.code));
+              if (p.data && p.data.status === 'ok') { clearInterval(poll); token = p.data.token; saveSession({ token, user: p.data.user }); startApp(); }
+              else if (p.data && p.data.status === 'expired') { clearInterval(poll); btn.disabled = false; btn.textContent = 'Открыть в браузере'; $('#auth-status').textContent = 'Код истёк — нажмите ещё раз.'; }
+            }, 2000);
+          });
         }
       })();
     </script>
